@@ -17,6 +17,24 @@ router.get('/datatest', (req, res) => {
   });
 });
 
+router.get('/lark-product', (req, res) => {
+  res.json({
+    message: 'lark-product',
+  });
+});
+
+router.get('/line-product', (req, res) => {
+  res.json({
+    message: 'line-product',
+  });
+});
+
+router.get('/whatapp-product', (req, res) => {
+  res.json({
+    message: 'whatapp-product',
+  });
+});
+
 
 router.post('/webhook/line-product/:forcompany', (req, res) => {
   let thisparam = req.params.forcompany
