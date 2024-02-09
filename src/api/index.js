@@ -11,6 +11,13 @@ router.get('/', (req, res) => {
   });
 });
 
+router.get('/datatest', (req, res) => {
+  res.json({
+    message: '123API - 123👋🌎🌍🌏',
+  });
+});
+
+
 router.post('/webhook/line-product/:forcompany', (req, res) => {
   let thisparam = req.params.forcompany
   let datainput = req.body
