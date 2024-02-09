@@ -23,9 +23,10 @@ router.get('/lark-product', (req, res) => {
   });
 });
 
-router.get('/line-product', (req, res) => {
+router.get('/line-product/:forcompany', (req, res) => {
+  let thisparam = req.params.forcompany
   res.json({
-    message: 'line-product',
+    message: thisparam,
   });
 });
 
