@@ -25,9 +25,17 @@ router.get('/lark-product', (req, res) => {
 
 router.get('/line-product/:forcompany', (req, res) => {
   let thisparam = req.params.forcompany
-  res.json({
-    message: thisparam,
-  });
+  request({
+    url : "https://larkapi.soidea.co/api/stud/getforcompany/"+thisparam,
+  }, (error, response, body) => {
+    //res.send(body)
+    var bodyparser = JSON.parse(body)
+    let lark_app_api = bodyparser['lark_app_api']
+    let lark_app_secret  = bodyparser['lark_app_secret'] 
+    let linetoken = bodyparser['linetoken']
+
+    res.json(body)
+  });     
 });
 
 router.get('/whatapp-product', (req, res) => {
