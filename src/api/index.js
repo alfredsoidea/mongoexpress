@@ -34,7 +34,7 @@ router.get('/line-product/:forcompany', (req, res) => {
     let lark_app_secret  = bodyparser['lark_app_secret'] 
     let linetoken = bodyparser['linetoken']
 
-    res.json(req)
+    res.json(body)
   });     
 });
 
