@@ -25,17 +25,32 @@ router.get('/lark-product', (req, res) => {
 
 router.get('/line-product/:forcompany', (req, res) => {
   let thisparam = req.params.forcompany
-  request({
-    url : "https://larkapi.soidea.co/api/stud/getforcompany/"+thisparam,
-  }, (error, response, body) => {
-    //res.send(body)
-    var bodyparser = JSON.parse(body)
-    let lark_app_api = bodyparser['lark_app_api']
-    let lark_app_secret  = bodyparser['lark_app_secret'] 
-    let linetoken = bodyparser['linetoken']
+  const http = require('http');
+  var postData = JSON.stringify({user: 'sample1'});
+  const options = {
+      hostname: "https://larkapi.soidea.co/setapidatabase/"+thisparam,
+      method: 'POST',
+      headers: {
+          'content-type': 'application/json',
+          'accept': 'application/json'
+      }
+  };
+  const req = http.request(options, (res) => {
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => {
+          console.log(`BODY: ${chunk}`);
+      });
+      res.on('end', () => {
+          console.log('No more data in response.');
+      });
+  });
 
-    res.json(body)
-  });     
+  req.on('error', (e) => {
+      console.error(`problem with request: ${e.message}`);
+  });
+  req.write(postData);
+  req.end();
+  res.send(200);
 });
 
 router.get('/whatapp-product', (req, res) => {
