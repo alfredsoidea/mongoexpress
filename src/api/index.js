@@ -1,5 +1,6 @@
 const express = require('express');
 var request = require('request');
+//const bodyParser = require('body-parser')
 
 const emojis = require('./emojis');
 
@@ -29,7 +30,7 @@ router.get('/line-product/:forcompany', (req, res) => {
   request({
     url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
     method: 'POST',
-    json: req
+    json: req.body
   }, (error, response, body) => {
     //res.send(body)
     //var bodyparser = JSON.parse(body)
