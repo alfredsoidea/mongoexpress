@@ -99,20 +99,15 @@ router.post('/line-product/:forcompany', (req, res) => {
           case 'image':
             datasendtext = currentElement['message']['id'];
             request({
-              url : "https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id",
+              url : "https://api-data.line.me/v2/bot/message/"+currentElement['message']['id']+"/content",
               headers: {
-                'Authorization': 'Bearer '+thisstoken,
+                'Authorization': 'Bearer '+linetoken,
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
               },
-              method: 'POST',
-              json: {
-                "receive_id": bodyparser['larkchatid'],
-                "msg_type": "text",
-                "content": JSON.stringify({ "text": "[image]" })
-              }
-            }, (error_textmess, response_textmess, body_textmess) => {
-              
+              method: 'GET'
+            }, (error_imagemess, response_imagemess, body_imagemess) => {
+              console.log(body_imagemess)
             })
             break;
           default:
