@@ -108,6 +108,15 @@ router.post('/line-product/:forcompany', (req, res) => {
               method: 'GET'
             }, (error_imagemess, response_imagemess, body_imagemess) => {
               datasendtext = body_imagemess
+              request({
+                url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json'
+                },
+                json: body_imagemess,
+                method: 'post'
+              })
             })
             break;
           case 'video':
