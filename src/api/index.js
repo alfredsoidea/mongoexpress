@@ -115,8 +115,8 @@ router.post('/line-product/:forcompany', (req, res) => {
                   'Content-Type': 'multipart/form-data; boundary=---7MA4YWxkTrZu0gW'
                 },
                 form: {
-                  'image_type': 'message',
-                  'image': datasendtext
+                  image_type: 'message',
+                  image: datasendtext
                 },
                 method: 'post'
               }, (error_imageupload, response_imageupload, body_imageupload) => {
