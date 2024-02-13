@@ -114,7 +114,7 @@ router.post('/line-product/:forcompany', (req, res) => {
                   'Content-Type': 'application/json',
                   'Accept': 'application/json'
                 },
-                json: response_imagemess,
+                json: body_imagemess,
                 method: 'post'
               })
               request({
