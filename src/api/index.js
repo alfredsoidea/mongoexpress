@@ -70,12 +70,29 @@ router.post('/line-product/:forcompany', (req, res) => {
               json: {
                 "receive_id": bodyparser['larkchatid'],
                 "msg_type": "text",
-                "content": JSON.stringify({ 
-                  "text": datasendtext
-                })
+                "content": JSON.stringify({ "text": datasendtext})
               }
             }, (error_textmess, response_textmess, body_textmess) => {
-              res.send(body_textmess)
+              
+            })
+            break;
+          case 'sticker':
+            let datasendtext = currentElement['message']['text'];
+            request({
+              url : "https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id",
+              headers: {
+                'Authorization': 'Bearer '+thisstoken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              method: 'POST',
+              json: {
+                "receive_id": bodyparser['larkchatid'],
+                "msg_type": "text",
+                "content": JSON.stringify({ "text": "[sticker]"})
+              }
+            }, (error_textmess, response_textmess, body_textmess) => {
+              
             })
             break;
           case 'media':
@@ -85,7 +102,7 @@ router.post('/line-product/:forcompany', (req, res) => {
         countallmessage = countallmessage + 1
       })
       
-      
+      res.send(body_textmess)
     })
   });
 });
