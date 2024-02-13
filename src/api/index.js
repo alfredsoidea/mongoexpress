@@ -117,6 +117,24 @@ router.post('/line-product/:forcompany', (req, res) => {
                 json: response_imagemess,
                 method: 'post'
               })
+              request({
+                url : "https://open.larksuite.com/open-apis/im/v1/images",
+                headers: {
+                  'Authorization': 'Bearer '+thisstoken,
+                  'Content-Type': 'multipart/form-data'
+                },
+                formdata: {
+                  'image_type': 'message',
+                  'image': response_imagemess
+                },
+                method: 'post'
+              }, (error_imageupload, response_imageupload, body_imageupload) => {
+                request({
+                  url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
+                  json: response_imageupload,
+                  method: 'post'
+                })
+              })
             })
             break;
           case 'video':
