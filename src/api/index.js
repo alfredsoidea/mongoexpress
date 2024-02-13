@@ -109,28 +109,23 @@ router.post('/line-product/:forcompany', (req, res) => {
             }, (error_imagemess, response_imagemess, body_imagemess) => {
               datasendtext = body_imagemess
               request({
-                url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json'
-                },
-                json: body_imagemess,
-                method: 'post'
-              })
-              request({
                 url : "https://open.larksuite.com/open-apis/im/v1/images",
                 headers: {
                   'Authorization': 'Bearer '+thisstoken,
-                  'Content-Type': 'multipart/form-data'
+                  'Content-Type': 'multipart/form-data; boundary=---7MA4YWxkTrZu0gW'
                 },
                 form: {
                   'image_type': 'message',
-                  'image': body_imagemess
+                  'image': datasendtext
                 },
                 method: 'post'
               }, (error_imageupload, response_imageupload, body_imageupload) => {
                 request({
                   url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                  },
                   json: response_imageupload,
                   method: 'post'
                 })
