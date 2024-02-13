@@ -55,7 +55,7 @@ router.post('/line-product/:forcompany', (req, res) => {
     }, (error_token, response_token, body_token) => {
       thisstoken = JSON.parse(body_token)['tenant_access_token']
       allmessage.forEach((currentElement, index) => {
-        console.log(currentElement)
+        datasendtext = "";
         let thismessagetype = currentElement['message']['type']
         switch(thismessagetype) {
           case 'text':
@@ -92,6 +92,8 @@ router.post('/line-product/:forcompany', (req, res) => {
                 "msg_type": "text",
                 "content": JSON.stringify({ "text": "[sticker]" })
               }
+            }, (error_textmess, response_textmess, body_textmess) => {
+              
             })
             break;
           case 'image':
@@ -103,12 +105,14 @@ router.post('/line-product/:forcompany', (req, res) => {
                 'Content-Type': 'application/json',
                 'Accept': 'application/json'
               },
-              method: 'GET',
+              method: 'POST',
               json: {
                 "receive_id": bodyparser['larkchatid'],
                 "msg_type": "text",
                 "content": JSON.stringify({ "text": "[image]" })
               }
+            }, (error_textmess, response_textmess, body_textmess) => {
+              
             })
             break;
           default:
