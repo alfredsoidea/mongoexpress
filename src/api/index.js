@@ -20,28 +20,74 @@ router.get('/datatest', (req, res) => {
 
 router.get('/lark-product', (req, res) => {
   res.json({
-    message: 'lark-product',
+    message: 'lark-product'
   });
 });
 
 router.post('/line-product/:forcompany', (req, res) => {
   let thisparam = req.params.forcompany
-  
-  request({
-    url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
-    method: 'POST',
-    json: req.body
-  }, (error, response, body) => {
-    //res.send(body)
-    //var bodyparser = JSON.parse(body)
-    //let lark_app_api = bodyparser['lark_app_api']
-    //let lark_app_secret  = bodyparser['lark_app_secret'] 
-    //let linetoken = bodyparser['linetoken']
-    
-    
+  var getuserdata = "test";
+  var requestbody = req.body
+  var allmessage = requestbody['events']
+  let countallmessage = 0;
+  var thisstoken = "";
+  var userId = allmessage[0]['source']['userId']
+  var sendtext = "";
 
-    res.send(200)
-  });     
+  request({
+    url : "https://larkapi.soidea.co/api/stud/getuserline/"+thisparam+"/"+userId,
+    method: 'GET'
+  }, (error, response, body) => {
+    var bodyparser = JSON.parse(body)
+    var thiscompany = bodyparser['forcompany']
+    let lark_app_api = thiscompany['lark_app_api']
+    let lark_app_secret  = thiscompany['lark_app_secret'] 
+    let linetoken = thiscompany['linetoken']
+    request({
+      url : "https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal",
+      method: 'POST',
+      header: "Content-type: application/json; charset=utf-8",
+      form: {
+        'app_id': lark_app_api,
+        'app_secret': lark_app_secret
+      }
+    }, (error_token, response_token, body_token) => {
+      thisstoken = JSON.parse(body_token)['tenant_access_token']
+      allmessage.forEach((currentElement, index) => {
+        console.log(currentElement)
+        let thismessagetype = currentElement['message']['type']
+        switch(thismessagetype) {
+          case 'text':
+            let datasendtext = currentElement['message']['text'];
+            request({
+              url : "https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id",
+              headers: {
+                'Authorization': 'Bearer '+thisstoken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              method: 'POST',
+              json: {
+                "receive_id": bodyparser['larkchatid'],
+                "msg_type": "text",
+                "content": JSON.stringify({ 
+                  "text": datasendtext
+                })
+              }
+            }, (error_textmess, response_textmess, body_textmess) => {
+              res.send(body_textmess)
+            })
+            break;
+          case 'media':
+            break;
+          default:
+        }
+        countallmessage = countallmessage + 1
+      })
+      
+      
+    })
+  });
 });
 
 router.get('/whatapp-product', (req, res) => {
@@ -49,35 +95,6 @@ router.get('/whatapp-product', (req, res) => {
     message: 'whatapp-product',
   });
 });
-
-
-router.post('/webhook/line-product/:forcompany', (req, res) => {
-  let thisparam = req.params.forcompany
-  let datainput = req.body
-  request({
-    url : "https://larkapi.soidea.co/api/stud/getforcompany/"+thisparam,
-  }, (error, response, body) => {
-    //res.send(body)
-    var bodyparser = JSON.parse(body)
-    let lark_app_api = bodyparser['lark_app_api']
-    let lark_app_secret  = bodyparser['lark_app_secret'] 
-    let linetoken = bodyparser['linetoken']
-
-    res.send(datainput)
-  });     
-  //res.send(forcompanys)
-})
-// router.post('/webhook/line-sproduct/:forcompany', (req, res) => {
-//   request({
-//     url : "https://larkapi.soidea.co/api/stud/getforcompany",
-//     headers : { "Authorization" : authenticationHeader }  
-//   }, (error, response, body) => {
-//      console.log(body);
-//   });     
-//   let thisparam = req.params.forcompany
-//   res.send(forcompanys)
-// })
-
 
 router.use('/emojis', emojis);
 
