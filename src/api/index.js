@@ -107,7 +107,21 @@ router.post('/line-product/:forcompany', (req, res) => {
               },
               method: 'GET'
             }, (error_imagemess, response_imagemess, body_imagemess) => {
-              console.log(body_imagemess)
+              datasendtext = body_imagemess
+            })
+            break;
+          case 'video':
+            datasendtext = currentElement['message']['id'];
+            request({
+              url : "https://api-data.line.me/v2/bot/message/"+currentElement['message']['id']+"/content",
+              headers: {
+                'Authorization': 'Bearer '+linetoken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              method: 'GET'
+            }, (error_imagemess, response_imagemess, body_imagemess) => {
+              datasendtext = body_imagemess
             })
             break;
           default:
