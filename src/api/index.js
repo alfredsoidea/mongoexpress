@@ -43,6 +43,7 @@ router.post('/line-product/:forcompany', (req, res) => {
     let lark_app_api = thiscompany['lark_app_api']
     let lark_app_secret  = thiscompany['lark_app_secret'] 
     let linetoken = thiscompany['linetoken']
+    let datasendtext
     request({
       url : "https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal",
       method: 'POST',
@@ -58,7 +59,7 @@ router.post('/line-product/:forcompany', (req, res) => {
         let thismessagetype = currentElement['message']['type']
         switch(thismessagetype) {
           case 'text':
-            let datasendtext = currentElement['message']['text'];
+            datasendtext = currentElement['message']['text'];
             request({
               url : "https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id",
               headers: {
@@ -77,7 +78,7 @@ router.post('/line-product/:forcompany', (req, res) => {
             })
             break;
           case 'sticker':
-            let datasendtext = currentElement['message']['text'];
+            datasendtext = currentElement['message']['text'];
             request({
               url : "https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id",
               headers: {
@@ -89,20 +90,33 @@ router.post('/line-product/:forcompany', (req, res) => {
               json: {
                 "receive_id": bodyparser['larkchatid'],
                 "msg_type": "text",
-                "content": JSON.stringify({ "text": "[sticker]"})
+                "content": JSON.stringify({ "text": "[sticker]" })
               }
-            }, (error_textmess, response_textmess, body_textmess) => {
-              
             })
             break;
-          case 'media':
+          case 'image':
+            datasendtext = currentElement['message']['id'];
+            request({
+              url : "https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id",
+              headers: {
+                'Authorization': 'Bearer '+thisstoken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              },
+              method: 'GET',
+              json: {
+                "receive_id": bodyparser['larkchatid'],
+                "msg_type": "text",
+                "content": JSON.stringify({ "text": "[image]" })
+              }
+            })
             break;
           default:
         }
         countallmessage = countallmessage + 1
       })
       
-      res.send(body_textmess)
+      res.send(datasendtext)
     })
   });
 });
