@@ -123,7 +123,7 @@ router.post('/line-product/:forcompany', (req, res) => {
                   'Authorization': 'Bearer '+thisstoken,
                   'Content-Type': 'multipart/form-data'
                 },
-                formdata: {
+                form: {
                   'image_type': 'message',
                   'image': body_imagemess
                 },
