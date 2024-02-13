@@ -125,7 +125,7 @@ router.post('/line-product/:forcompany', (req, res) => {
                 },
                 formdata: {
                   'image_type': 'message',
-                  'image': response_imagemess
+                  'image': body_imagemess
                 },
                 method: 'post'
               }, (error_imageupload, response_imageupload, body_imageupload) => {
