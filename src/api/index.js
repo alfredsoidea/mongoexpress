@@ -97,17 +97,13 @@ router.post('/line-product/:forcompany', (req, res) => {
             })
             break;
           case 'image':
-            datasendtext = currentElement['message']['id'];
             request({
               url : "https://api-data.line.me/v2/bot/message/"+currentElement['message']['id']+"/content",
               headers: {
-                'Authorization': 'Bearer '+linetoken,
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Authorization': 'Bearer '+linetoken
               },
               method: 'GET'
             }, (error_imagemess, response_imagemess, body_imagemess) => {
-              datasendtext = body_imagemess
               request({
                 url : "https://open.larksuite.com/open-apis/im/v1/images",
                 headers: {
@@ -116,16 +112,12 @@ router.post('/line-product/:forcompany', (req, res) => {
                 },
                 form: {
                   image_type: 'message',
-                  image: datasendtext
+                  image: body_imagemess
                 },
                 method: 'post'
               }, (error_imageupload, response_imageupload, body_imageupload) => {
                 request({
                   url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
-                  headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                  },
                   json: response_imageupload,
                   method: 'post'
                 })
