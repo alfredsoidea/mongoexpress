@@ -104,9 +104,6 @@ router.post('/line-product/:forcompany', (req, res) => {
               }
             }).then((response) => response.blob()).then((myBlob) => {
               const objectURL = URL.createObjectURL(myBlob);
-              var formData = new FormData();
-              formData.append("image", objectURL);
-              formData.append("image_type", "message");
               request({
                 url : "https://open.larksuite.com/open-apis/im/v1/images",
                 method: 'post',
@@ -114,7 +111,10 @@ router.post('/line-product/:forcompany', (req, res) => {
                   'Authorization': 'Bearer '+thisstoken,
                   'Content-Type': 'multipart/form-data'
                 },
-                form: formData
+                form: {
+                  "image_type": "message",
+                  "image": objectURL
+                }
               },(error_textimage, response_textimage, body_textimage) => {
                 request({
                   url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
