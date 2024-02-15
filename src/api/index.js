@@ -97,7 +97,32 @@ router.post('/line-product/:forcompany', (req, res) => {
             })
             break;
           case 'image':
-            sendimage (currentElement, linetoken, thisstoken)
+            fetch("https://api-data.line.me/v2/bot/message/"+currentElement['message']['id']+"/content", {
+              method: 'get',
+              headers: {
+                'Authorization': 'Bearer '+linetoken
+              }
+            }).then((response) => response.blob()).then((myBlob) => {
+              const objectURL = URL.createObjectURL(myBlob);
+              var formData = new FormData();
+              formData.append("image", objectURL);
+              formData.append("image_type", "message");
+              request({
+                url : "https://open.larksuite.com/open-apis/im/v1/images",
+                method: 'post',
+                headers: {
+                  'Authorization': 'Bearer '+thisstoken,
+                  'Content-Type': 'multipart/form-data;'
+                },
+                form: formData
+              },(error_textimage, response_textimage, body_textimage) => {
+                request({
+                  url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
+                  json: response_textimage,
+                  method: 'post'
+                })
+              })
+            });
             break;
           case 'video':
             datasendtext = currentElement['message']['id'];
@@ -128,36 +153,6 @@ router.get('/whatapp-product', (req, res) => {
     message: 'whatapp-product',
   });
 });
-
-
-function sendimage (currentElement, linetoken, thisstoken) {
-  fetch("https://api-data.line.me/v2/bot/message/"+currentElement['message']['id']+"/content", {
-    method: 'get',
-    headers: {
-      'Authorization': 'Bearer '+linetoken
-    }
-  }).then((response) => response.blob()).then((myBlob) => {
-    var formData = new FormData();
-    formData.append("image", myBlob);
-    formData.append("image_type", "message");
-    const objectURL = URL.createObjectURL(myBlob);
-    request({
-      url : "https://open.larksuite.com/open-apis/im/v1/images",
-      method: 'post',
-      headers: {
-        'Authorization': 'Bearer '+thisstoken,
-        'Content-Type': 'multipart/form-data;'
-      },
-      form: formData
-    },(error_textimage, response_textimage, body_textimage) => {
-      request({
-        url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
-        json: response_textimage,
-        method: 'post'
-      })
-    })
-  });
-}
 
 router.use('/emojis', emojis);
 
