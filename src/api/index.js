@@ -27,11 +27,6 @@ router.get('/lark-product', (req, res) => {
 router.post('/line-product/:forcompany', (req, res) => {
 
   let thisparam = req.params.forcompany
-  request({
-    url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
-    json: req.body,
-    method: 'post'
-  })
   var getuserdata = "test";
   var requestbody = req.body
   var allmessage = requestbody['events']
@@ -39,6 +34,12 @@ router.post('/line-product/:forcompany', (req, res) => {
   var thisstoken = "";
   var userId = allmessage[0]['source']['userId']
   var sendtext = "";
+
+  request({
+    url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
+    json: requestbody,
+    method: 'post'
+  })
 
   request({
     url : "https://larkapi.soidea.co/api/stud/getuserline/"+thisparam+"/"+userId,
