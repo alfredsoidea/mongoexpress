@@ -101,26 +101,25 @@ router.post('/line-product/:forcompany', (req, res) => {
               url : "https://api-data.line.me/v2/bot/message/"+currentElement['message']['id']+"/content",
               headers: { 'Authorization': 'Bearer '+linetoken },
               method: 'GET'
-            }, (error_imagemess, response_imagemess, body_imagemess) => {
+            }, (error_imagemess, response_imagemess, body_imagemess) => response.blob()).then((myBlob) => {
+              const objectURL = URL.createObjectURL(myBlob);
+              console.log(objectURL)
+            });
+            fetch("https://api-data.line.me/v2/bot/message/"+currentElement['message']['id']+"/content")
+            .then((response) => response.blob())
+            .then((myBlob) => {
+              const objectURL = URL.createObjectURL(myBlob);
               request({
-                url : "https://open.larksuite.com/open-apis/im/v1/images",
-                headers: {
-                  'Authorization': 'Bearer '+thisstoken,
-                  'Content-Type': 'multipart/form-data; boundary=---7MA4YWxkTrZu0gW'
-                },
-                form: {
-                  image_type: 'message',
-                  image: body_imagemess
-                },
+                url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
+                json: { 'test': myBlob },
                 method: 'post'
-              }, (error_imageupload, response_imageupload, body_imageupload) => {
-                request({
-                  url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
-                  json: { test: currentElement['message']['id'] },
-                  method: 'post'
-                })
               })
-            })
+              request({
+                url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
+                json: { 'test': objectURL },
+                method: 'post'
+              })
+            });
             break;
           case 'video':
             datasendtext = currentElement['message']['id'];
