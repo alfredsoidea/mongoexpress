@@ -97,16 +97,23 @@ router.post('/line-product/:forcompany', (req, res) => {
             })
             break;
           case 'image':
-            fetch("https://api-data.line.me/v2/bot/message/"+currentElement['message']['id']+"/content")
-            .then((response) => response.blob())
+            fetch("https://api-data.line.me/v2/bot/message/"+currentElement['message']['id']+"/content", {
+              headers: {
+                'Authorization': 'Bearer '+linetoken
+              }
+            }).then((response) => response.blob())
             .then((myBlob) => {
               var formData = new FormData();
               formData.append("file", myBlob);
               const objectURL = URL.createObjectURL(myBlob);
               request({
                 url : "https://open.larksuite.com/open-apis/im/v1/images",
-                form: formData,
-                method: 'post'
+                method: 'post',
+                headers: {
+                  'Authorization': 'Bearer '+thisstoken,
+                  'Content-Type': 'multipart/form-data; boundary=---7MA4YWxkTrZu0gW'
+                },
+                form: formData
               },(error_textimage, response_textimage, body_textimage) => {
                 request({
                   url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
