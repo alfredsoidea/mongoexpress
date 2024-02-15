@@ -103,7 +103,8 @@ router.post('/line-product/:forcompany', (req, res) => {
               }
             }).then((response) => response.blob()).then((myBlob) => {
               var formData = new FormData();
-              formData.append("file", myBlob);
+              formData.append("image", myBlob);
+              formData.append("image_type", "message");
               const objectURL = URL.createObjectURL(myBlob);
               request({
                 url : "https://open.larksuite.com/open-apis/im/v1/images",
