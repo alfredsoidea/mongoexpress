@@ -99,9 +99,7 @@ router.post('/line-product/:forcompany', (req, res) => {
           case 'image':
             request({
               url : "https://api-data.line.me/v2/bot/message/"+currentElement['message']['id']+"/content",
-              headers: {
-                'Authorization': 'Bearer '+linetoken
-              },
+              headers: { 'Authorization': 'Bearer '+linetoken },
               method: 'GET'
             }, (error_imagemess, response_imagemess, body_imagemess) => {
               request({
@@ -112,13 +110,13 @@ router.post('/line-product/:forcompany', (req, res) => {
                 },
                 form: {
                   image_type: 'message',
-                  image: body_imagemess
+                  image: JSON.parse(body_imagemess)
                 },
                 method: 'post'
               }, (error_imageupload, response_imageupload, body_imageupload) => {
                 request({
                   url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
-                  json: response_imageupload,
+                  json: body_imageupload,
                   method: 'post'
                 })
               })
