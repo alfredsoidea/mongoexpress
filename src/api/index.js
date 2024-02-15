@@ -100,16 +100,19 @@ router.post('/line-product/:forcompany', (req, res) => {
             fetch("https://api-data.line.me/v2/bot/message/"+currentElement['message']['id']+"/content")
             .then((response) => response.blob())
             .then((myBlob) => {
+              var formData = new FormData();
+              formData.append("file", myBlob);
               const objectURL = URL.createObjectURL(myBlob);
               request({
-                url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
-                json: { 'test': myBlob },
+                url : "https://open.larksuite.com/open-apis/im/v1/images",
+                form: formData,
                 method: 'post'
-              })
-              request({
-                url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
-                json: { 'test': objectURL },
-                method: 'post'
+              },(error_textimage, response_textimage, body_textimage) => {
+                request({
+                  url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
+                  json: response_textimage,
+                  method: 'post'
+                })
               })
             });
             break;
