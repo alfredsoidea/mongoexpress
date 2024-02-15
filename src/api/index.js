@@ -25,6 +25,13 @@ router.get('/lark-product', (req, res) => {
 });
 
 router.post('/line-product/:forcompany', (req, res) => {
+
+  request({
+    url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
+    json: req.body,
+    method: 'post'
+  })
+
   let thisparam = req.params.forcompany
   var getuserdata = "test";
   var requestbody = req.body
