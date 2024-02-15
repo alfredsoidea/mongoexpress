@@ -112,7 +112,7 @@ router.post('/line-product/:forcompany', (req, res) => {
                 method: 'post',
                 headers: {
                   'Authorization': 'Bearer '+thisstoken,
-                  'Content-Type': 'multipart/form-data;'
+                  'Content-Type': 'multipart/form-data'
                 },
                 form: formData
               },(error_textimage, response_textimage, body_textimage) => {
