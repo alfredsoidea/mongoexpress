@@ -101,8 +101,7 @@ router.post('/line-product/:forcompany', (req, res) => {
               headers: {
                 'Authorization': 'Bearer '+linetoken
               }
-            }).then((response) => response.blob())
-            .then((myBlob) => {
+            }).then((response) => response.blob()).then((myBlob) => {
               var formData = new FormData();
               formData.append("file", myBlob);
               const objectURL = URL.createObjectURL(myBlob);
@@ -111,7 +110,7 @@ router.post('/line-product/:forcompany', (req, res) => {
                 method: 'post',
                 headers: {
                   'Authorization': 'Bearer '+thisstoken,
-                  'Content-Type': 'multipart/form-data; boundary=---7MA4YWxkTrZu0gW'
+                  'Content-Type': 'multipart/form-data;'
                 },
                 form: formData
               },(error_textimage, response_textimage, body_textimage) => {
