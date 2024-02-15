@@ -97,14 +97,6 @@ router.post('/line-product/:forcompany', (req, res) => {
             })
             break;
           case 'image':
-            request({
-              url : "https://api-data.line.me/v2/bot/message/"+currentElement['message']['id']+"/content",
-              headers: { 'Authorization': 'Bearer '+linetoken },
-              method: 'GET'
-            }, (error_imagemess, response_imagemess, body_imagemess) => response.blob()).then((myBlob) => {
-              const objectURL = URL.createObjectURL(myBlob);
-              console.log(objectURL)
-            });
             fetch("https://api-data.line.me/v2/bot/message/"+currentElement['message']['id']+"/content")
             .then((response) => response.blob())
             .then((myBlob) => {
