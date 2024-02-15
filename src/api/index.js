@@ -110,13 +110,13 @@ router.post('/line-product/:forcompany', (req, res) => {
                 },
                 form: {
                   image_type: 'message',
-                  image: JSON.parse(body_imagemess)
+                  image: body_imagemess
                 },
                 method: 'post'
               }, (error_imageupload, response_imageupload, body_imageupload) => {
                 request({
                   url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
-                  json: body_imageupload,
+                  json: { test: currentElement['message']['id'] },
                   method: 'post'
                 })
               })
