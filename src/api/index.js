@@ -46,9 +46,7 @@ router.post('/lark-sendmessage/:forcompany', async (req, res) => {
   await console.log(thisstoken)
   var userdata = await getuserdataapi(requestbody.source, requestbody.from, thisparam)
   await sendmessagetolark(thisstoken, requestbody.meta.type, thisforcompany, requestbody.content, userdata.data)
-  await res.json({
-    message: "thisstoken"
-  });
+  await res.send(200, "ok");
 });
 
 function getuserdataapi (source, userId, forcompany) {
