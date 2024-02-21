@@ -50,9 +50,7 @@ router.post('/lark-sendmessage/:forcompany', async (req, res) => {
 });
 
 function getuserdataapi (source, userId, forcompany) {
-  if (source == 'line') {
-    return axios.get('https://larkapi.soidea.co/getuserlineoa/'+forcompany+'/'+userId)
-  }
+  return axios.get('https://larkapi.soidea.co/getuserlineoa/'+forcompany+'/'+userId)
 }
 
 function sendmessagetolark (thisstoken,thismessagetype, forcompany, contentdata, userdata) {
