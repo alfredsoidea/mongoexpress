@@ -1,5 +1,6 @@
 const express = require('express');
 var request = require('request');
+const axios = require('axios');
 //const bodyParser = require('body-parser')
 
 const emojis = require('./emojis');
@@ -23,6 +24,67 @@ router.get('/lark-product', (req, res) => {
     message: 'lark-product'
   });
 });
+
+router.post('/lark-sendmessage/:forcompany', async (req, res) => {
+  console.log("req.body")
+  console.log(req.body)
+  let thisparam = req.params.forcompany
+  var getuserdata = "test";
+  var requestbody = req.body
+  var thisforcompany = await axios.get('https://larkapi.soidea.co/getforcompany/'+thisparam);
+  await console.log("thisforcompany")
+  var thisstoken = await axios.post(
+      'https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal', {
+        'app_id': thisforcompany.data.lark_app_api,
+        'app_secret': thisforcompany.data.lark_app_secret
+      }, {
+        headers: {
+          'Content-type': 'application/json; charset=utf-8'
+        }
+    })
+  thisstoken = thisstoken.data.tenant_access_token
+  await console.log(thisstoken)
+  var userdata = await getuserdataapi(requestbody.source, requestbody.from, thisparam)
+  await sendmessagetolark(thisstoken, requestbody.meta.type, thisforcompany, requestbody.content, userdata.data)
+  await res.json({
+    message: "thisstoken"
+  });
+});
+
+function getuserdataapi (source, userId, forcompany) {
+  if (source == 'line') {
+    return axios.get('https://larkapi.soidea.co/getuserlineoa/'+forcompany+'/'+userId)
+  }
+}
+
+function sendmessagetolark (thisstoken,thismessagetype, forcompany, contentdata, userdata) {
+  console.log("start sendmessagetolark")
+  console.log(thismessagetype)
+  console.log(contentdata)
+  console.log(thisstoken)
+  switch(thismessagetype) {
+    case 'text':
+      datasendtext = contentdata.text;
+      request({
+        url : "https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id",
+        headers: {
+          'Authorization': 'Bearer '+thisstoken,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        method: 'POST',
+        json: {
+          "receive_id": userdata.larkchatid,
+          "msg_type": "text",
+          "content": JSON.stringify({ "text": datasendtext})
+        }
+      }, (error_textmess, response_textmess, body_textmess) => {
+        console.log(body_textmess)
+      })
+      break;
+    default:
+  }
+}
 
 router.post('/line-product/:forcompany', (req, res) => {
 
@@ -109,25 +171,21 @@ router.post('/line-product/:forcompany', (req, res) => {
               headers: {
                 'Authorization': 'Bearer '+linetoken
               }
-            }).then((response) => response.blob()).then((myBlob) => {
-              const objectURL = URL.createObjectURL(myBlob);
-              request({
-                url : "https://open.larksuite.com/open-apis/im/v1/images",
+            }).then(response => response.blob()).then((dataget) => {
+              console.log("imagethen")
+              axios({
                 method: 'post',
                 headers: {
                   'Authorization': 'Bearer '+thisstoken,
                   'Content-Type': 'multipart/form-data'
                 },
-                form: {
-                  "image_type": "message",
-                  "image": objectURL
+                url: 'https://open.larksuite.com/open-apis/im/v1/images',
+                data: {
+                  image_type: "message",
+                  image: bufferdata
                 }
-              },(error_textimage, response_textimage, body_textimage) => {
-                request({
-                  url : "https://larkapi.soidea.co/setapidatabase/"+thisparam,
-                  json: response_textimage,
-                  method: 'post'
-                })
+              }).then((response2) => {
+                console.log(response2);
               })
             });
             break;
