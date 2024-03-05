@@ -30,7 +30,7 @@ function makeid(length) {
     return result;
 }
 
-function sendMessagetoLark (thisstoken,thismessagetype, forcompany, contentdata, userdata, linetoken) {
+async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, contentdata, userdata, linetoken) {
   console.log("start sendMessagetoLark")
   //console.log(thismessagetype)
   //console.log(userdata)
@@ -53,37 +53,43 @@ function sendMessagetoLark (thisstoken,thismessagetype, forcompany, contentdata,
       })
       break;
     case 'image':
-      console.log("thisimage")
-      axios.get('https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content', {
+      console.log("thisimagestart")
+      console.log("thisimagestart1")
+      var dataresult = await axios({ 
+        method: 'get', 
+        url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
         headers: { 
           'Authorization': 'Bearer '+linetoken
         }
-      }).then((dataresult) => {
-        axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
-          "image_type": "message",
-          "image": dataresult.data
-        }, {
-          headers: {
-            'Content-Type': 'multipart/form-data', 
-            'Authorization': 'Bearer ' + thisstoken 
-          }
-        }).then((dataresultsent) => {
-          axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-            "receive_id": userdata.larkchatid,
-            "msg_type": "media",
-            "content": {
-              "file_key": dataresultsent.data.image_key,
-              "image_key": dataresultsent.data.image_key
-            }
-          }, {
-            headers: {
-              'Authorization': 'Bearer '+thisstoken,
-              'Content-Type': 'application/json',
-              'Accept': 'application/json'
-            }
-          })
-        })
       })
+      console.log("thisimagestart2")
+      console.log(dataresult)
+      var dataresultsent = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
+        "image_type": "message",
+        "image": dataresult.data
+      }, {
+        headers: {
+          'Authorization': 'Bearer '+thisstoken,
+          'Content-Type': 'multipart/form-data' 
+        }
+      })
+      console.log("dataresultsent")
+      await console.log(dataresultsent)
+      console.log("thisimagestart3")
+      // await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+      //   "receive_id": userdata.larkchatid,
+      //   "msg_type": "media",
+      //   "content": {
+      //     "file_key": dataresultsent.data.image_key,
+      //     "image_key": dataresultsent.data.image_key
+      //   }
+      // }, {
+      //   headers: {
+      //     'Authorization': 'Bearer '+thisstoken,
+      //     'Content-Type': 'application/json',
+      //     'Accept': 'application/json'
+      //   }
+      // })
       break;
     default:
   }
@@ -117,8 +123,8 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   let thisparam = req.params.forcompany
   var getuserdata = "test";
   var requestbody = req.body
-  console.log("req.body")
-  console.log(JSON.stringify(req.body))
+  //console.log("req.body")
+  //console.log(JSON.stringify(req.body))
   var allmessage = requestbody['events']
   let countallmessage = 0;
   var thisstoken = "";
@@ -135,7 +141,7 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
       headers: { 'Content-type': 'application/json; charset=utf-8' }
     })
   thisstoken = thisstoken.data.tenant_access_token
-  console.log(userdata)
+  //console.log(userdata)
   allmessage.forEach((currentElement, index) => {
     let thismessagetype = currentElement['message']['type']
     sendMessagetoLark(thisstoken, currentElement.message.type, thisforcompany, currentElement, userdata, thisforcompany.data.linetoken)
