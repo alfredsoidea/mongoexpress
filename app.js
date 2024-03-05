@@ -117,6 +117,7 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   let thisparam = req.params.forcompany
   var getuserdata = "test";
   var requestbody = req.body
+  console.log(requestbody)
   var allmessage = requestbody['events']
   let countallmessage = 0;
   var thisstoken = "";
