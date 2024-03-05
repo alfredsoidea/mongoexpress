@@ -53,7 +53,8 @@ async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, conten
       })
       break;
     case 'video':
-      var dataresult = await axios({ 
+      console.log('video')
+      let dataresultvideo = await axios({ 
         method: 'get', 
         responseType: 'arraybuffer',
         url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
@@ -61,17 +62,53 @@ async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, conten
           'Authorization': 'Bearer '+linetoken
         }
       })
-      var dataresultsent = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
+
+      let dataresultsentvideo = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
         "file_type": "mp4",
         "file_name": "video_"+makeid(20)+".mp4",
-        "file": dataresult
+        "file": dataresultvideo.data
       }, {
         headers: {
           'Authorization': 'Bearer '+thisstoken,
           'Content-Type': 'multipart/form-data' 
         }
       })
-      console.log(dataresultsent)
+
+      let dataresultvideo_preview = await axios({ 
+        method: 'get', 
+        responseType: 'arraybuffer',
+        url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content/preview',
+        headers: {  'Authorization': 'Bearer '+linetoken }
+      })
+
+      console.log("dataresultvideo_preview")
+
+      let videoPrev = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
+        "image_type": "message",
+        "image": dataresultvideo_preview.data
+      }, {
+        headers: {
+          'Authorization': 'Bearer '+thisstoken,
+          'Content-Type': 'multipart/form-data' 
+        }
+      })
+
+      //sending video message
+      await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+        "receive_id": userdata.larkchatid,
+        "msg_type": "media",
+        "content": JSON.stringify({
+          "image_key": videoPrev.data.data.image_key,
+          "file_key": dataresultsentvideo.data.data.file_key,
+        })
+      }, {
+        headers: {
+          'Authorization': 'Bearer '+thisstoken,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      })
+
       break;
     case 'image':
       var dataresult = await axios({ 
