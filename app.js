@@ -52,9 +52,7 @@ async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, conten
         }
       })
       break;
-    case 'image':
-      console.log("thisimagestart")
-      console.log("thisimagestart1")
+    case 'video':
       var dataresult = await axios({ 
         method: 'get', 
         responseType: 'arraybuffer',
@@ -63,8 +61,27 @@ async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, conten
           'Authorization': 'Bearer '+linetoken
         }
       })
-      console.log("thisimagestart2")
-      console.log(dataresult)
+      var dataresultsent = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
+        "file_type": "mp4",
+        "file_name": "video_"+makeid(20)+".mp4",
+        "file": dataresult
+      }, {
+        headers: {
+          'Authorization': 'Bearer '+thisstoken,
+          'Content-Type': 'multipart/form-data' 
+        }
+      })
+      console.log(dataresultsent)
+      break;
+    case 'image':
+      var dataresult = await axios({ 
+        method: 'get', 
+        responseType: 'arraybuffer',
+        url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
+        headers: { 
+          'Authorization': 'Bearer '+linetoken
+        }
+      })
       var dataresultsent = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
         "image_type": "message",
         "image": dataresult.data
@@ -74,9 +91,6 @@ async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, conten
           'Content-Type': 'multipart/form-data' 
         }
       })
-      console.log("dataresultsent2")
-      //await console.log(dataresultsent.data.data.image_key)
-      console.log("thisimagestart3")
       await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
         "receive_id": userdata.larkchatid,
         "msg_type": "image",
@@ -123,7 +137,7 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   let thisparam = req.params.forcompany
   var getuserdata = "test";
   var requestbody = req.body
-  //console.log("req.body")
+  console.log("req.body")
   //console.log(JSON.stringify(req.body))
   var allmessage = requestbody['events']
   let countallmessage = 0;
