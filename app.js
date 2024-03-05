@@ -72,8 +72,8 @@ function sendMessagetoLark (thisstoken,thismessagetype, forcompany, contentdata,
             "receive_id": userdata.larkchatid,
             "msg_type": "media",
             "content": {
-              "file_key": dataresultsent.data.image_key
-              "image_key": dataresultsent.data.image_key,
+              "file_key": dataresultsent.data.image_key,
+              "image_key": dataresultsent.data.image_key
             }
           }, {
             headers: {
@@ -87,7 +87,6 @@ function sendMessagetoLark (thisstoken,thismessagetype, forcompany, contentdata,
       break;
     default:
   }
-  console.log(linetoken)
 }
 
 
