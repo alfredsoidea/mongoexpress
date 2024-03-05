@@ -79,6 +79,7 @@ async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, conten
       let dataresultsentvideo = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
         "file_type": "mp4",
         "file_name": "video_"+makeid(20)+".mp4",
+        "duration": contentdata.message.duration,
         "file": dataresultvideo.data
       }, {
         headers: {
