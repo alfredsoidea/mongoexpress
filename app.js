@@ -59,7 +59,30 @@ function sendMessagetoLark (thisstoken,thismessagetype, forcompany, contentdata,
           'Authorization': 'Bearer '+linetoken
         }
       }).then((dataresult) => {
-        console.log(dataresult)
+        axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
+          "image_type": "message",
+          "image": dataresult.data
+        }, {
+          headers: {
+            'Content-Type': 'multipart/form-data', 
+            'Authorization': 'Bearer ' + thisstoken 
+          }
+        }).then((dataresultsent) => {
+          axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+            "receive_id": userdata.larkchatid,
+            "msg_type": "media",
+            "content": {
+              "file_key": dataresultsent.data.image_key
+              "image_key": dataresultsent.data.image_key,
+            }
+          }, {
+            headers: {
+              'Authorization': 'Bearer '+thisstoken,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          })
+        })
       })
       break;
     default:
