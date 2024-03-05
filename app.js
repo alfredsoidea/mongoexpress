@@ -74,15 +74,15 @@ async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, conten
           'Content-Type': 'multipart/form-data' 
         }
       })
-      console.log("dataresultsent")
-      await console.log(dataresultsent)
+      console.log("dataresultsent2")
+      //await console.log(dataresultsent.data.data.image_key)
       console.log("thisimagestart3")
       await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
         "receive_id": userdata.larkchatid,
         "msg_type": "image",
         "content": JSON.stringify({
-          "image_key": dataresultsent.data.image_key
-        }),
+          "image_key": dataresultsent.data.data.image_key
+        })
       }, {
         headers: {
           'Authorization': 'Bearer '+thisstoken,
