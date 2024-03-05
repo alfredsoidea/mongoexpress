@@ -138,7 +138,7 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   var getuserdata = "test";
   var requestbody = req.body
   console.log("req.body")
-  //console.log(JSON.stringify(req.body))
+  console.log(JSON.stringify(req.body))
   var allmessage = requestbody['events']
   let countallmessage = 0;
   var thisstoken = "";
