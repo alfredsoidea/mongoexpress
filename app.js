@@ -52,6 +52,19 @@ async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, conten
         }
       })
       break;
+    case 'sticker':
+      axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+        "receive_id": userdata.larkchatid,
+        "msg_type": "text",
+        "content": JSON.stringify({ "text": "[ sticker ]" })
+      }, {
+        headers: {
+          'Authorization': 'Bearer '+thisstoken,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      })
+      break;
     case 'video':
       console.log('video')
       let dataresultvideo = await axios({ 
