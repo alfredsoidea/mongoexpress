@@ -76,11 +76,13 @@ async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, conten
         }
       })
 
+      let fileData = dataresultvideo.data
+
       let dataresultsentvideo = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
         "file_type": "mp4",
         "file_name": "video_"+makeid(20)+".mp4",
-        "duration": contentdata.message.duration
-        "file": dataresultvideo.data
+        "duration": contentdata.message.duration,
+        "file": fileData
       }, {
         headers: {
           'Authorization': 'Bearer '+thisstoken,
@@ -208,7 +210,7 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   thisstoken = thisstoken.data.tenant_access_token
   allmessage.forEach((currentElement, index) => {
     let thismessagetype = currentElement['message']['type']
-    await sendMessagetoLark(thisstoken, currentElement.message.type, thisforcompany, currentElement, userdata, thisforcompany.data.linetoken)
+    sendMessagetoLark(thisstoken, currentElement.message.type, thisforcompany, currentElement, userdata, thisforcompany.data.linetoken)
   })
   res.status(200).send('ok')
 })
