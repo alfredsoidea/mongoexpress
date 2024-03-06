@@ -60,13 +60,13 @@ async function sendMessagetoLark (thisstoken, forcompany, userdata) {
   const querySnapshot = await getDocs(q);
   let messagejson = [];
   await querySnapshot.forEach((doc) => {
-    let bodydata = doc.data()
-    bodydata.id = doc.id
     if (bodydata.status == 'wait') {
+      let bodydata = doc.data()
+      bodydata.id = doc.id
       bodydata.status = 'process'
       setMessageSent(doc.id, forcompany, 'process')
+      messagejson.push(bodydata)
     }
-    messagejson.push(bodydata)
   });
   const jsonAsArray = await Object.keys(messagejson).map(function (key) {
     return messagejson[key];
@@ -262,7 +262,6 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   })
   let countallmessage = 0;
   var thisstoken = "";
-  let checkuserline = await axios.get('https://larkapi.soidea.co/checkuserline/'+thisparam+'/'+userId);
   let thisforcompany = await axios.get('https://larkapi.soidea.co/getforcompany/'+thisparam);
   let userdata = checkuserline.data
   thisstoken = await axios.post(
@@ -273,6 +272,7 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
       headers: { 'Content-type': 'application/json; charset=utf-8' }
     })
   thisstoken = thisstoken.data.tenant_access_token
+  let checkuserline = await axios.get('https://larkapi.soidea.co/checkuserline/'+thisparam+'/'+userId+'/'+thisstoken);
   sendMessagetoLark(thisstoken, thisforcompany.data , userdata)
   res.status(200).send('ok')
 })
