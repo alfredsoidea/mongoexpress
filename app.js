@@ -9,12 +9,12 @@ import cors from 'cors';
 import { initializeApp } from "firebase/app";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCKHzfvSFZdulSduNEuSir2UFVRnjJZlKQ",
-  authDomain: "alfred-line.firebaseapp.com",
-  projectId: "alfred-line",
-  storageBucket: "alfred-line.appspot.com",
-  messagingSenderId: "654507791187",
-  appId: "1:654507791187:web:9ab5cede56d313f85747a6"
+  apiKey: "AIzaSyBKU0BuRrLaVudLHwPjlMpVHkK5tW645Yo",
+  authDomain: "alfred-line-webhook-api.firebaseapp.com",
+  projectId: "alfred-line-webhook-api",
+  storageBucket: "alfred-line-webhook-api.appspot.com",
+  messagingSenderId: "586062678452",
+  appId: "1:586062678452:web:5aa9ba7ae0ae18bd770ae1"
 };
 
 
@@ -206,7 +206,6 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
       headers: { 'Content-type': 'application/json; charset=utf-8' }
     })
   thisstoken = thisstoken.data.tenant_access_token
-  //console.log(userdata)
   allmessage.forEach((currentElement, index) => {
     let thismessagetype = currentElement['message']['type']
     await sendMessagetoLark(thisstoken, currentElement.message.type, thisforcompany, currentElement, userdata, thisforcompany.data.linetoken)
