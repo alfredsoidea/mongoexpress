@@ -265,7 +265,6 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   let userId = allmessage[0]['source']['userId']
   let thisforcompany
   let thisstoken
-
   //set message to  firebase [status:wait]
   await allmessage.forEach((currentElement, index) => {
     addDoc(collection(dbstore, "message_line_"+thisparam), {
@@ -279,14 +278,16 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   })
   await getUserData(thisparam, userId).then((resuser) => {
     console.log("resuser")
-    console.log(resuser.data)
-    getForcompany(thisparam).then((thisforcompany) => {
-      getTokenlark(thisforcompany).then((thisstokenres) => {
-        thisstoken = thisstokenres.data.tenant_access_token
-        sendMessagetoLark(thisstoken, thisforcompany.data , resuser.data)
-        res.status(200).send('ok')
-      })
-    })
+    console.log(resuser)
+    if (resuser.data == "creating") {} else {
+      getForcompany(thisparam).then((thisforcompany) => {
+        getTokenlark(thisforcompany).then((thisstokenres) => {
+          thisstoken = thisstokenres.data.tenant_access_token
+          sendMessagetoLark(thisstoken, thisforcompany.data , resuser.data)
+          res.status(200).send('ok')
+        })
+      })  
+    }
   })
 })
 
