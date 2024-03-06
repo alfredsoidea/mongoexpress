@@ -243,38 +243,51 @@ app.get('/', (req, res) => {
   res.json({message: 'test'});
 });
 
+async function getForcompany (thisparam) {
+  let data = await axios.get('https://larkapi.soidea.co/getforcompany/'+thisparam);
+  return data;
+}
+async function getTokenlark (thisforcompany) {
+  let data  = await axios.post('https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal', {
+    'app_id': thisforcompany.data.lark_app_api,
+    'app_secret': thisforcompany.data.lark_app_secret
+  }, {
+    headers: { 'Content-type': 'application/json; charset=utf-8' }
+  })
+  return data;
+}
+
 app.post('/line/webhook/:forcompany', async (req, res) => {
   let thisparam = req.params.forcompany
   let requestbody = req.body
   console.log(JSON.stringify(req.body))
   let allmessage = requestbody['events']
   let userId = allmessage[0]['source']['userId']
+  let thisforcompany
+  let thisstoken
+
   //set message to  firebase [status:wait]
-  allmessage.forEach((currentElement, index) => {
+  await allmessage.forEach((currentElement, index) => {
     addDoc(collection(dbstore, "message_line_"+thisparam), {
       init_timestamp: currentElement.timestamp,
       user_id: userId,
       message_data: currentElement,
       status: "wait",
-      forcompany: thisparam
+      forcompany: thisparam,
+      created_at: Date.now()
     });
   })
-  let countallmessage = 0;
-  let thisstoken = "";
-  let thisforcompany = await axios.get('https://larkapi.soidea.co/getforcompany/'+thisparam);
-  thisstoken = await axios.post('https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal', {
-    'app_id': thisforcompany.data.lark_app_api,
-    'app_secret': thisforcompany.data.lark_app_secret
-  }, {
-    headers: { 'Content-type': 'application/json; charset=utf-8' }
+  await getUserData(thisparam, userId).then((resuser) => {
+    console.log("resuser")
+    console.log(resuser.data)
+    getForcompany(thisparam).then((thisforcompany) => {
+      getTokenlark(thisforcompany).then((thisstokenres) => {
+        thisstoken = thisstokenres.data.tenant_access_token
+        sendMessagetoLark(thisstoken, thisforcompany.data , resuser.data)
+        res.status(200).send('ok')
+      })
+    })
   })
-  thisstoken = thisstoken.data.tenant_access_token
-  await getUserData(thisparam, userId, thisstoken).then((res) => {
-    console.log(res)
-    let userdata = res
-    sendMessagetoLark(thisstoken, thisforcompany.data , userdata)
-  })
-  res.status(200).send('ok')
 })
 
 app.post('/upload_firebase', multer().single('file') , (req, res) => {
@@ -319,10 +332,10 @@ app.post('/upload_firebase', multer().single('file') , (req, res) => {
   });
 });
 
-async function getUserData (thisparam, userId, thisstoken) {
+async function getUserData (thisparam, userId) {
   try {
      let res = await axios({
-          url: 'https://larkapi.soidea.co/checkuserline/'+thisparam+'/'+userId+'/'+thisstoken,
+          url: 'https://larkapi.soidea.co/checkuserline/'+thisparam+'/'+userId,
           method: 'get',
           timeout: 15000,
           headers: {
@@ -332,7 +345,7 @@ async function getUserData (thisparam, userId, thisstoken) {
       if(res.status == 200){
         console.log(res.status)
       }    
-      return res.data
+      return res
   }
   catch (err) {
       console.error(err);
