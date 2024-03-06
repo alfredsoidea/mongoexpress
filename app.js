@@ -62,6 +62,10 @@ async function sendMessagetoLark (thisstoken, forcompany, userdata) {
   await querySnapshot.forEach((doc) => {
     let bodydata = doc.data()
     bodydata.id = doc.id
+    if (bodydata.status == 'wait') {
+      bodydata.status = 'process'
+      setMessageSent(doc.id, forcompany, 'process')
+    }
     messagejson.push(bodydata)
   });
   const jsonAsArray = await Object.keys(messagejson).map(function (key) {
@@ -97,137 +101,136 @@ async function sendmessage (thisstoken, forcompany, userdata, datamessage) {
   let linetoken = forcompany.linetoken
   let thismessagetype = datamessage.message_data.message.type
   let datamessagekey = datamessage.id
-  if (datamessage.status == 'wait') {
-    setMessageSent(datamessagekey, forcompany, 'process')
-  }
   let contentdata = datamessage.message_data
   let datareturn = ""
-  switch(thismessagetype) {
-    case 'text':
-      let datasendtext = contentdata.message.text
-      datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-        "receive_id": userdata.larkchatid,
-        "msg_type": "text",
-        "content": JSON.stringify({ "text": datasendtext })
-      }, {
-        headers: {
-          'Authorization': 'Bearer '+thisstoken,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      })
-      setMessageSent(datamessagekey, forcompany, 'sent')
-      break;
-    case 'sticker':
-      datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-        "receive_id": userdata.larkchatid,
-        "msg_type": "text",
-        "content": JSON.stringify({ "text": "[ sticker ]" })
-      }, {
-        headers: {
-          'Authorization': 'Bearer '+thisstoken,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      })
-      setMessageSent(datamessagekey, forcompany, 'sent')
-      break;
-    case 'video':
-      console.log('video')
-      let dataresultvideo = await axios({ 
-        method: 'get', 
-        responseType: 'arraybuffer',
-        url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
-        headers: { 
-          'Authorization': 'Bearer '+linetoken
-        }
-      })
-
-      let fileData = dataresultvideo.data
-
-      let dataresultsentvideo = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
-        "file_type": "mp4",
-        "file_name": "video_"+makeid(20)+".mp4",
-        "duration": contentdata.message.duration,
-        "file": fileData
-      }, {
-        headers: {
-          'Authorization': 'Bearer '+thisstoken,
-          'Content-Type': 'multipart/form-data' 
-        }
-      })
-
-      let dataresultvideo_preview = await axios({ 
-        method: 'get', 
-        responseType: 'arraybuffer',
-        url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content/preview',
-        headers: {  'Authorization': 'Bearer '+linetoken }
-      })
-
-      console.log("dataresultvideo_preview")
-
-      let videoPrev = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
-        "image_type": "message",
-        "image": dataresultvideo_preview.data
-      }, {
-        headers: {
-          'Authorization': 'Bearer '+thisstoken,
-          'Content-Type': 'multipart/form-data' 
-        }
-      })
-
-      //sending video message
-      datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-        "receive_id": userdata.larkchatid,
-        "msg_type": "media",
-        "content": JSON.stringify({
-          "image_key": videoPrev.data.data.image_key,
-          "file_key": dataresultsentvideo.data.data.file_key,
+  if (datamessage.status == 'process') {
+    switch(thismessagetype) {
+      case 'text':
+        let datasendtext = contentdata.message.text
+        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+          "receive_id": userdata.larkchatid,
+          "msg_type": "text",
+          "content": JSON.stringify({ "text": datasendtext })
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
         })
-      }, {
-        headers: {
-          'Authorization': 'Bearer '+thisstoken,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      })
-
-      setMessageSent(datamessagekey, forcompany, 'sent')
-      break;
-    case 'image':
-      var dataresult = await axios({ 
-        method: 'get', 
-        responseType: 'arraybuffer',
-        url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
-        headers: { 
-          'Authorization': 'Bearer '+linetoken
-        }
-      })
-      var dataresultsent = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
-        "image_type": "message",
-        "image": dataresult.data
-      }, {
-        headers: {
-          'Authorization': 'Bearer '+thisstoken,
-          'Content-Type': 'multipart/form-data' 
-        }
-      })
-      datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-        "receive_id": userdata.larkchatid,
-        "msg_type": "image",
-        "content": JSON.stringify({
-          "image_key": dataresultsent.data.data.image_key
+        setMessageSent(datamessagekey, forcompany, 'sent')
+        break;
+      case 'sticker':
+        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+          "receive_id": userdata.larkchatid,
+          "msg_type": "text",
+          "content": JSON.stringify({ "text": "[ sticker ]" })
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
         })
-      }, {
-        headers: {
-          'Authorization': 'Bearer '+thisstoken,
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
-      })
-      setMessageSent(datamessagekey, forcompany, 'sent')
-      break;
-    default:
+        setMessageSent(datamessagekey, forcompany, 'sent')
+        break;
+      case 'video':
+        console.log('video')
+        let dataresultvideo = await axios({ 
+          method: 'get', 
+          responseType: 'arraybuffer',
+          url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
+          headers: { 
+            'Authorization': 'Bearer '+linetoken
+          }
+        })
+
+        let fileData = dataresultvideo.data
+
+        let dataresultsentvideo = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
+          "file_type": "mp4",
+          "file_name": "video_"+makeid(20)+".mp4",
+          "duration": contentdata.message.duration,
+          "file": fileData
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'multipart/form-data' 
+          }
+        })
+
+        let dataresultvideo_preview = await axios({ 
+          method: 'get', 
+          responseType: 'arraybuffer',
+          url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content/preview',
+          headers: {  'Authorization': 'Bearer '+linetoken }
+        })
+
+        console.log("dataresultvideo_preview")
+
+        let videoPrev = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
+          "image_type": "message",
+          "image": dataresultvideo_preview.data
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'multipart/form-data' 
+          }
+        })
+
+        //sending video message
+        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+          "receive_id": userdata.larkchatid,
+          "msg_type": "media",
+          "content": JSON.stringify({
+            "image_key": videoPrev.data.data.image_key,
+            "file_key": dataresultsentvideo.data.data.file_key,
+          })
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+
+        setMessageSent(datamessagekey, forcompany, 'sent')
+        break;
+      case 'image':
+        var dataresult = await axios({ 
+          method: 'get', 
+          responseType: 'arraybuffer',
+          url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
+          headers: { 
+            'Authorization': 'Bearer '+linetoken
+          }
+        })
+        var dataresultsent = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
+          "image_type": "message",
+          "image": dataresult.data
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'multipart/form-data' 
+          }
+        })
+        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+          "receive_id": userdata.larkchatid,
+          "msg_type": "image",
+          "content": JSON.stringify({
+            "image_key": dataresultsent.data.data.image_key
+          })
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+        setMessageSent(datamessagekey, forcompany, 'sent')
+        break;
+      default:
+    }
   }
 }
 
