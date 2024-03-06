@@ -7,7 +7,6 @@ import axios from 'axios';
 
 import cors from 'cors';
 import { initializeApp } from "firebase/app";
-
 const firebaseConfig = {
   apiKey: "AIzaSyBKU0BuRrLaVudLHwPjlMpVHkK5tW645Yo",
   authDomain: "alfred-line-webhook-api.firebaseapp.com",
@@ -16,6 +15,30 @@ const firebaseConfig = {
   messagingSenderId: "586062678452",
   appId: "1:586062678452:web:5aa9ba7ae0ae18bd770ae1"
 };
+const firebaseapp = initializeApp(firebaseConfig);
+//require('dotenv').config();
+
+//import api from './api/index.js';
+import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable } from "firebase/storage";
+import { 
+          getDoc,
+          getDocs,
+          where,
+          orderBy,
+          doc,
+          query,
+          updateDoc,
+          setDoc,
+          addDoc,
+          increment,
+          getFirestore,
+          collection,
+          runTransaction
+} from "firebase/firestore";
+
+const storage = getStorage();
+const dbstore = getFirestore();
+const app = express();
 
 
 function makeid(length) {
@@ -30,17 +53,57 @@ function makeid(length) {
     return result;
 }
 
-async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, contentdata, userdata, linetoken) {
+async function sendMessagetoLark (thisstoken, forcompany, userdata) {
+  let dataref = collection(dbstore, "message_line_"+forcompany.forcompany)
+  console.log(dataref)
+  const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userdata.user_id));
+  const querySnapshot = await getDocs(q);
+  let messagejson = [];
+  await querySnapshot.forEach((doc) => {
+    let bodydata = doc.data()
+    bodydata.id = doc.id
+    messagejson.push(bodydata)
+  });
+  const jsonAsArray = await Object.keys(messagejson).map(function (key) {
+    return messagejson[key];
+  }).sort(function (itemA, itemB) {
+    return itemA.init_timestamp < itemB.init_timestamp;
+  });
+  await jsonAsArray.forEach((doc) => {
+    sendmessage(thisstoken, forcompany, userdata, doc)
+  });
   console.log("start sendMessagetoLark")
-  //console.log(thismessagetype)
-  //console.log(userdata)
-  console.log("contentdata")
-  console.log(linetoken)
-  //console.log(contentdata)
+}
+
+async function setMessageSent(datamessagekey, forcompany) {
+  let dataref = collection(dbstore, "message_line_"+forcompany.forcompany)
+  let datarefdoc = doc(dataref, datamessagekey)
+  try {
+    await runTransaction(dbstore, async (transaction) => {
+    const sfDoc = await transaction.get(datarefdoc);
+      if (!sfDoc.exists()) {
+        throw "Document does not exist!";
+      }
+
+      const newPopulation = 'sent';
+      transaction.update(datarefdoc, { status: newPopulation });
+    });
+    console.log('Transaction success!');
+  } catch (e) {
+    console.log('Transaction failure:', e);
+  }
+}
+async function sendmessage (thisstoken, forcompany, userdata, datamessage) {
+  let linetoken = forcompany.linetoken
+  let thismessagetype = datamessage.message_data.message.type
+  console.log(datamessage)
+  let datamessagekey = datamessage.id
+  let contentdata = datamessage.message_data
+  let datareturn = ""
   switch(thismessagetype) {
     case 'text':
       let datasendtext = contentdata.message.text
-      axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+      datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
         "receive_id": userdata.larkchatid,
         "msg_type": "text",
         "content": JSON.stringify({ "text": datasendtext })
@@ -51,9 +114,10 @@ async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, conten
           'Accept': 'application/json'
         }
       })
+      setMessageSent(datamessagekey, forcompany)
       break;
     case 'sticker':
-      axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+      datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
         "receive_id": userdata.larkchatid,
         "msg_type": "text",
         "content": JSON.stringify({ "text": "[ sticker ]" })
@@ -64,6 +128,7 @@ async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, conten
           'Accept': 'application/json'
         }
       })
+      setMessageSent(datamessagekey, forcompany)
       break;
     case 'video':
       console.log('video')
@@ -110,7 +175,7 @@ async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, conten
       })
 
       //sending video message
-      await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+      datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
         "receive_id": userdata.larkchatid,
         "msg_type": "media",
         "content": JSON.stringify({
@@ -125,6 +190,7 @@ async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, conten
         }
       })
 
+      setMessageSent(datamessagekey, forcompany)
       break;
     case 'image':
       var dataresult = await axios({ 
@@ -144,7 +210,7 @@ async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, conten
           'Content-Type': 'multipart/form-data' 
         }
       })
-      await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+      datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
         "receive_id": userdata.larkchatid,
         "msg_type": "image",
         "content": JSON.stringify({
@@ -157,25 +223,11 @@ async function sendMessagetoLark (thisstoken,thismessagetype, forcompany, conten
           'Accept': 'application/json'
         }
       })
+      setMessageSent(datamessagekey, forcompany)
       break;
     default:
   }
 }
-
-
-
-// Initialize Firebase
-const firebaseapp = initializeApp(firebaseConfig);
-
-//require('dotenv').config();
-
-//import api from './api/index.js';
-
-import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable } from "firebase/storage";
-
-const storage = getStorage();
-
-const app = express();
 
 app.use(morgan('dev'));
 app.use(helmet());
@@ -190,13 +242,21 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   let thisparam = req.params.forcompany
   var getuserdata = "test";
   var requestbody = req.body
-  console.log("req.body")
   console.log(JSON.stringify(req.body))
-  var allmessage = requestbody['events']
+  let allmessage = requestbody['events']
+  let userId = allmessage[0]['source']['userId']
+  //set message to  firebase [status:wait]
+  allmessage.forEach((currentElement, index) => {
+    addDoc(collection(dbstore, "message_line_"+thisparam), {
+      init_timestamp: currentElement.timestamp,
+      user_id: userId,
+      message_data: currentElement,
+      status: "wait",
+      forcompany: thisparam
+    });
+  })
   let countallmessage = 0;
   var thisstoken = "";
-  var userId = allmessage[0]['source']['userId']
-  console.log("checkuserline")
   let checkuserline = await axios.get('https://larkapi.soidea.co/checkuserline/'+thisparam+'/'+userId);
   let thisforcompany = await axios.get('https://larkapi.soidea.co/getforcompany/'+thisparam);
   let userdata = checkuserline.data
@@ -208,10 +268,7 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
       headers: { 'Content-type': 'application/json; charset=utf-8' }
     })
   thisstoken = thisstoken.data.tenant_access_token
-  allmessage.forEach((currentElement, index) => {
-    let thismessagetype = currentElement['message']['type']
-    sendMessagetoLark(thisstoken, currentElement.message.type, thisforcompany, currentElement, userdata, thisforcompany.data.linetoken)
-  })
+  sendMessagetoLark(thisstoken, thisforcompany.data , userdata)
   res.status(200).send('ok')
 })
 

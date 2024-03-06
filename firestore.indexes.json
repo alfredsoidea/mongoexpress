@@ -1,0 +1,17 @@
+{
+  "indexes": [
+    {
+      "collectionId": "message_line_alfreddemo",
+      "fields": [
+        {
+          "fieldPath": "init_timestamp",
+          "mode": "ASCENDING"
+        },
+        {
+          "fieldPath": "user_id",
+          "mode": "ASCENDING"
+        }
+      ]
+    }
+  ]
+}
