@@ -263,7 +263,6 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   let countallmessage = 0;
   var thisstoken = "";
   let thisforcompany = await axios.get('https://larkapi.soidea.co/getforcompany/'+thisparam);
-  let userdata = checkuserline.data
   thisstoken = await axios.post(
     'https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal', {
       'app_id': thisforcompany.data.lark_app_api,
@@ -273,6 +272,7 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
     })
   thisstoken = thisstoken.data.tenant_access_token
   let checkuserline = await axios.get('https://larkapi.soidea.co/checkuserline/'+thisparam+'/'+userId+'/'+thisstoken);
+  let userdata = await checkuserline.data
   sendMessagetoLark(thisstoken, thisforcompany.data , userdata)
   res.status(200).send('ok')
 })
