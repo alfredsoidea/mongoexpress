@@ -75,9 +75,9 @@ async function sendMessagetoLark (thisstoken, forcompany, userdata) {
   console.log("start sendMessagetoLark")
 }
 
-async function setMessageSent(datamessagekey, forcompany) {
-  let dataref = collection(dbstore, "message_line_"+forcompany.forcompany)
-  let datarefdoc = doc(dataref, datamessagekey)
+async function setMessageSent(datamessagekey, forcompany, statuschange) {
+  let dataref = await collection(dbstore, "message_line_"+forcompany.forcompany)
+  let datarefdoc = await doc(dataref, datamessagekey)
   try {
     await runTransaction(dbstore, async (transaction) => {
     const sfDoc = await transaction.get(datarefdoc);
@@ -85,7 +85,7 @@ async function setMessageSent(datamessagekey, forcompany) {
         throw "Document does not exist!";
       }
 
-      const newPopulation = 'sent';
+      const newPopulation = statuschange;
       transaction.update(datarefdoc, { status: newPopulation });
     });
     console.log('Transaction success!');
@@ -96,8 +96,10 @@ async function setMessageSent(datamessagekey, forcompany) {
 async function sendmessage (thisstoken, forcompany, userdata, datamessage) {
   let linetoken = forcompany.linetoken
   let thismessagetype = datamessage.message_data.message.type
-  console.log(datamessage)
   let datamessagekey = datamessage.id
+  if (datamessage.status == 'wait') {
+    setMessageSent(datamessagekey, forcompany, 'process')
+  }
   let contentdata = datamessage.message_data
   let datareturn = ""
   switch(thismessagetype) {
@@ -114,7 +116,7 @@ async function sendmessage (thisstoken, forcompany, userdata, datamessage) {
           'Accept': 'application/json'
         }
       })
-      setMessageSent(datamessagekey, forcompany)
+      setMessageSent(datamessagekey, forcompany, 'sent')
       break;
     case 'sticker':
       datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
@@ -128,7 +130,7 @@ async function sendmessage (thisstoken, forcompany, userdata, datamessage) {
           'Accept': 'application/json'
         }
       })
-      setMessageSent(datamessagekey, forcompany)
+      setMessageSent(datamessagekey, forcompany, 'sent')
       break;
     case 'video':
       console.log('video')
@@ -190,7 +192,7 @@ async function sendmessage (thisstoken, forcompany, userdata, datamessage) {
         }
       })
 
-      setMessageSent(datamessagekey, forcompany)
+      setMessageSent(datamessagekey, forcompany, 'sent')
       break;
     case 'image':
       var dataresult = await axios({ 
@@ -223,7 +225,7 @@ async function sendmessage (thisstoken, forcompany, userdata, datamessage) {
           'Accept': 'application/json'
         }
       })
-      setMessageSent(datamessagekey, forcompany)
+      setMessageSent(datamessagekey, forcompany, 'sent')
       break;
     default:
   }
