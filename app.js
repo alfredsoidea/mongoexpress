@@ -60,7 +60,7 @@ async function sendMessagetoLark (thisstoken, forcompany, userdata) {
   const querySnapshot = await getDocs(q);
   let messagejson = [];
   await querySnapshot.forEach((doc) => {
-    if (bodydata.status == 'wait') {
+    if (doc.data().status == 'wait') {
       let bodydata = doc.data()
       bodydata.id = doc.id
       bodydata.status = 'process'
