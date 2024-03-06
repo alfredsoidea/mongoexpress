@@ -245,8 +245,7 @@ app.get('/', (req, res) => {
 
 app.post('/line/webhook/:forcompany', async (req, res) => {
   let thisparam = req.params.forcompany
-  var getuserdata = "test";
-  var requestbody = req.body
+  let requestbody = req.body
   console.log(JSON.stringify(req.body))
   let allmessage = requestbody['events']
   let userId = allmessage[0]['source']['userId']
@@ -261,19 +260,20 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
     });
   })
   let countallmessage = 0;
-  var thisstoken = "";
+  let thisstoken = "";
   let thisforcompany = await axios.get('https://larkapi.soidea.co/getforcompany/'+thisparam);
-  thisstoken = await axios.post(
-    'https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal', {
-      'app_id': thisforcompany.data.lark_app_api,
-      'app_secret': thisforcompany.data.lark_app_secret
-    }, {
-      headers: { 'Content-type': 'application/json; charset=utf-8' }
-    })
+  thisstoken = await axios.post('https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal', {
+    'app_id': thisforcompany.data.lark_app_api,
+    'app_secret': thisforcompany.data.lark_app_secret
+  }, {
+    headers: { 'Content-type': 'application/json; charset=utf-8' }
+  })
   thisstoken = thisstoken.data.tenant_access_token
-  let checkuserline = await axios.get('https://larkapi.soidea.co/checkuserline/'+thisparam+'/'+userId+'/'+thisstoken);
-  let userdata = await checkuserline.data
-  sendMessagetoLark(thisstoken, thisforcompany.data , userdata)
+  await getUserData(thisparam, userId, thisstoken).then((res) => {
+    console.log(res)
+    let userdata = res
+    sendMessagetoLark(thisstoken, thisforcompany.data , userdata)
+  })
   res.status(200).send('ok')
 })
 
@@ -319,8 +319,24 @@ app.post('/upload_firebase', multer().single('file') , (req, res) => {
   });
 });
 
-function checklineuser (forcompany, userId) {
-
+async function getUserData (thisparam, userId, thisstoken) {
+  try {
+     let res = await axios({
+          url: 'https://larkapi.soidea.co/checkuserline/'+thisparam+'/'+userId+'/'+thisstoken,
+          method: 'get',
+          timeout: 15000,
+          headers: {
+              'Content-Type': 'application/json',
+          }
+      })
+      if(res.status == 200){
+        console.log(res.status)
+      }    
+      return res.data
+  }
+  catch (err) {
+      console.error(err);
+  }
 }
 
 const port = process.env.PORT || 8000;
