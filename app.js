@@ -5,7 +5,12 @@ import multer from 'multer';
 import request from 'request';
 import axios from 'axios';
 
+import functionjs from "./functionjs/index.js";
+
+console.log(functionjs.sayHello())
+
 import cors from 'cors';
+
 import { initializeApp } from "firebase/app";
 const firebaseConfig = {
   apiKey: "AIzaSyBKU0BuRrLaVudLHwPjlMpVHkK5tW645Yo",
@@ -41,199 +46,6 @@ const dbstore = getFirestore();
 const app = express();
 
 
-function makeid(length) {
-    let result = '';
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    const charactersLength = characters.length;
-    let counter = 0;
-    while (counter < length) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-      counter += 1;
-    }
-    return result;
-}
-
-async function sendMessagetoLark (thisstoken, forcompany, userdata) {
-  let dataref = collection(dbstore, "message_line_"+forcompany.forcompany)
-  console.log(dataref)
-  const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userdata.user_id));
-  const querySnapshot = await getDocs(q);
-  let messagejson = [];
-  await querySnapshot.forEach((doc) => {
-    if (doc.data().status == 'wait') {
-      let bodydata = doc.data()
-      bodydata.id = doc.id
-      bodydata.status = 'process'
-      setMessageSent(doc.id, forcompany, 'process')
-      messagejson.push(bodydata)
-    }
-  });
-  const jsonAsArray = await Object.keys(messagejson).map(function (key) {
-    return messagejson[key];
-  }).sort(function (itemA, itemB) {
-    return itemA.init_timestamp < itemB.init_timestamp;
-  });
-  await jsonAsArray.forEach((doc) => {
-    sendmessage(thisstoken, forcompany, userdata, doc)
-  });
-  console.log("start sendMessagetoLark")
-}
-
-async function setMessageSent(datamessagekey, forcompany, statuschange) {
-  let dataref = await collection(dbstore, "message_line_"+forcompany.forcompany)
-  let datarefdoc = await doc(dataref, datamessagekey)
-  try {
-    await runTransaction(dbstore, async (transaction) => {
-    const sfDoc = await transaction.get(datarefdoc);
-      if (!sfDoc.exists()) {
-        throw "Document does not exist!";
-      }
-
-      const newPopulation = statuschange;
-      transaction.update(datarefdoc, { status: newPopulation });
-    });
-    console.log('Transaction success!');
-  } catch (e) {
-    console.log('Transaction failure:', e);
-  }
-}
-async function sendmessage (thisstoken, forcompany, userdata, datamessage) {
-  let linetoken = forcompany.linetoken
-  let thismessagetype = datamessage.message_data.message.type
-  let datamessagekey = datamessage.id
-  let contentdata = datamessage.message_data
-  let datareturn = ""
-  if (datamessage.status == 'process') {
-    switch(thismessagetype) {
-      case 'text':
-        let datasendtext = contentdata.message.text
-        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-          "receive_id": userdata.larkchatid,
-          "msg_type": "text",
-          "content": JSON.stringify({ "text": datasendtext })
-        }, {
-          headers: {
-            'Authorization': 'Bearer '+thisstoken,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        })
-        setMessageSent(datamessagekey, forcompany, 'sent')
-        break;
-      case 'sticker':
-        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-          "receive_id": userdata.larkchatid,
-          "msg_type": "text",
-          "content": JSON.stringify({ "text": "[ sticker ]" })
-        }, {
-          headers: {
-            'Authorization': 'Bearer '+thisstoken,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        })
-        setMessageSent(datamessagekey, forcompany, 'sent')
-        break;
-      case 'video':
-        console.log('video')
-        let dataresultvideo = await axios({ 
-          method: 'get', 
-          responseType: 'arraybuffer',
-          url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
-          headers: { 
-            'Authorization': 'Bearer '+linetoken
-          }
-        })
-
-        let fileData = dataresultvideo.data
-
-        let dataresultsentvideo = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
-          "file_type": "mp4",
-          "file_name": "video_"+makeid(20)+".mp4",
-          "duration": contentdata.message.duration,
-          "file": fileData
-        }, {
-          headers: {
-            'Authorization': 'Bearer '+thisstoken,
-            'Content-Type': 'multipart/form-data' 
-          }
-        })
-
-        let dataresultvideo_preview = await axios({ 
-          method: 'get', 
-          responseType: 'arraybuffer',
-          url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content/preview',
-          headers: {  'Authorization': 'Bearer '+linetoken }
-        })
-
-        console.log("dataresultvideo_preview")
-
-        let videoPrev = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
-          "image_type": "message",
-          "image": dataresultvideo_preview.data
-        }, {
-          headers: {
-            'Authorization': 'Bearer '+thisstoken,
-            'Content-Type': 'multipart/form-data' 
-          }
-        })
-
-        //sending video message
-        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-          "receive_id": userdata.larkchatid,
-          "msg_type": "media",
-          "content": JSON.stringify({
-            "image_key": videoPrev.data.data.image_key,
-            "file_key": dataresultsentvideo.data.data.file_key,
-          })
-        }, {
-          headers: {
-            'Authorization': 'Bearer '+thisstoken,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        })
-
-        setMessageSent(datamessagekey, forcompany, 'sent')
-        break;
-      case 'image':
-        var dataresult = await axios({ 
-          method: 'get', 
-          responseType: 'arraybuffer',
-          url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
-          headers: { 
-            'Authorization': 'Bearer '+linetoken
-          }
-        })
-        var dataresultsent = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
-          "image_type": "message",
-          "image": dataresult.data
-        }, {
-          headers: {
-            'Authorization': 'Bearer '+thisstoken,
-            'Content-Type': 'multipart/form-data' 
-          }
-        })
-        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-          "receive_id": userdata.larkchatid,
-          "msg_type": "image",
-          "content": JSON.stringify({
-            "image_key": dataresultsent.data.data.image_key
-          })
-        }, {
-          headers: {
-            'Authorization': 'Bearer '+thisstoken,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        })
-        setMessageSent(datamessagekey, forcompany, 'sent')
-        break;
-      default:
-    }
-  }
-}
-
 app.use(morgan('dev'));
 app.use(helmet());
 app.use(cors());
@@ -243,20 +55,6 @@ app.get('/', (req, res) => {
   res.json({message: 'test'});
 });
 
-async function getForcompany (thisparam) {
-  let data = await axios.get('https://larkapi.soidea.co/getforcompany/'+thisparam);
-  return data;
-}
-async function getTokenlark (thisforcompany) {
-  let data  = await axios.post('https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal', {
-    'app_id': thisforcompany.data.lark_app_api,
-    'app_secret': thisforcompany.data.lark_app_secret
-  }, {
-    headers: { 'Content-type': 'application/json; charset=utf-8' }
-  })
-  return data;
-}
-
 app.post('/line/webhook/:forcompany', async (req, res) => {
   let thisparam = req.params.forcompany
   let requestbody = req.body
@@ -265,6 +63,7 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   let userId = allmessage[0]['source']['userId']
   let thisforcompany
   let thisstoken
+
   //set message to  firebase [status:wait]
   await allmessage.forEach((currentElement, index) => {
     addDoc(collection(dbstore, "message_line_"+thisparam), {
@@ -276,19 +75,38 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
       created_at: Date.now()
     });
   })
-  await getUserData(thisparam, userId).then((resuser) => {
-    console.log("resuser")
-    console.log(resuser)
-    if (resuser.data == "creating") {} else {
-      getForcompany(thisparam).then((thisforcompany) => {
-        getTokenlark(thisforcompany).then((thisstokenres) => {
-          thisstoken = thisstokenres.data.tenant_access_token
-          sendMessagetoLark(thisstoken, thisforcompany.data , resuser.data)
-          res.status(200).send('ok')
-        })
-      })  
-    }
+
+  let resuser = await functionjs.getUserData(thisparam, userId)
+  console.log("resuser")
+  console.log(resuser)
+  thisforcompany = await functionjs.getForcompany(thisparam)
+  console.log("thisforcompany")
+  console.log(thisforcompany)
+  let thisstokenres = await functionjs.getTokenlark(thisforcompany)
+  thisstoken = thisstokenres
+  await functionjs.query_message_by_user(thisstoken, thisparam , resuser.data)
+  await res.status(200).send('ok')
+})
+
+app.post('/line-checkdata/:forcompany', async (req, res) => {
+  let thisparam = req.params.forcompany
+  let thisforcompany = await axios.get('https://larkapi.soidea.co/getforcompany/'+thisparam);
+  let thisstokenres  = await axios.post('https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal', {
+    'app_id': thisforcompany.data.lark_app_api,
+    'app_secret': thisforcompany.data.lark_app_secret
+  }, {
+    headers: { 'Content-type': 'application/json; charset=utf-8' }
   })
+  let thisstoken = thisstokenres.data.tenant_access_token
+  console.log(await thisstoken)
+  let dataref = await collection(dbstore, "message_line_"+thisparam)
+  const q = query(dataref, where("status", "==", "wait"));
+  const querySnapshot = await getDocs(q);
+  let messagejson = [];
+  await querySnapshot.forEach((doc) => {
+    send_message_by_webhook(thisstoken, thisforcompany.data, doc.data())
+  });
+  res.status(200).send('ok')
 })
 
 app.post('/upload_firebase', multer().single('file') , (req, res) => {
@@ -298,7 +116,7 @@ app.post('/upload_firebase', multer().single('file') , (req, res) => {
   const metadata = {
     contentType: req.file.mimetype
   };
-  const storageRef = ref(storage, 'images/' + makeid(20) + "-" + req.file.originalname);
+  const storageRef = ref(storage, 'images/' + functionjs.makeid(20) + "-" + req.file.originalname);
   const uploadTask = uploadBytesResumable(storageRef, file, metadata);
   uploadTask.on('state_changed', (snapshot) => {
       console.log(snapshot)
@@ -332,26 +150,6 @@ app.post('/upload_firebase', multer().single('file') , (req, res) => {
     message: 'done'
   });
 });
-
-async function getUserData (thisparam, userId) {
-  try {
-     let res = await axios({
-          url: 'https://larkapi.soidea.co/checkuserline/'+thisparam+'/'+userId,
-          method: 'get',
-          timeout: 15000,
-          headers: {
-              'Content-Type': 'application/json',
-          }
-      })
-      if(res.status == 200){
-        console.log(res.status)
-      }    
-      return res
-  }
-  catch (err) {
-      console.error(err);
-  }
-}
 
 const port = process.env.PORT || 8000;
 
