@@ -58,7 +58,7 @@ const functionjs = {
       "name": displayName,
       "avatar": imagekey,
       "bot_id_list": [ thisforcompany.lark_app_api ],
-      "user_id_list": [ "693ed1af", "e5ac2d23 " ]
+      "user_id_list": [ "693ed1af", "e5ac2d23" ]
     }, {
       headers: {
         'Authorization': 'Bearer ' + thisstoken,
