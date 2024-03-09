@@ -34,7 +34,8 @@ import {
           increment,
           getFirestore,
           collection,
-          runTransaction
+          runTransaction,
+          serverTimestamp
 } from "firebase/firestore";
 
 const storage = getStorage();
@@ -46,11 +47,22 @@ const functionjs = {
   sayHello: function() {
     return 'Hello!';
   },
-  get_userline_data: async function (thisparam, userId) {
-    await onSnapshot(doc(dbstore, "userline_"+thisparam, userId), (doc) => {
-      console.log("Current data: ", doc.data());
-      return doc.data()
-    });
+  get_userline_data: async function (thisforcompany, userId) {
+    const docRef = doc(dbstore, "userline_"+tthisforcompany.name, userId)
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return docSnap.data()
+    } else {
+      addDoc(collection(dbstore, "userline"+thisparam, userId), {
+        forcompany: thisforcompany.name,
+        timestamp: serverTimestamp(),
+        displayname: "pre",
+        larkchatid: "pre",
+        pictureurl: "pre",
+        user_id: userId
+      });
+    }
+    
   },
   getForcompany: async function (thisparam) {
     const docRef = doc(dbstore, "company", thisparam);

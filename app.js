@@ -61,7 +61,6 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   console.log(JSON.stringify(req.body))
   let allmessage = requestbody['events']
   let userId = allmessage[0]['source']['userId']
-  let thisforcompany
   let thisstoken
 
   //set message to  firebase [status:wait]
@@ -79,11 +78,11 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
     }
   })
 
-  let resuser = await functionjs.get_userline_data(thisparam, userId)
-  thisforcompany = await functionjs.getForcompany(thisparam)
+  let thisforcompany = await functionjs.getForcompany(thisparam)
+  let resuser = await functionjs.get_userline_data(thisforcompany, userId)
   let thisstokenres = await functionjs.getTokenlark(thisforcompany)
   thisstoken = thisstokenres
-  await functionjs.query_message_by_user(thisstoken, thisparam , resuser.data)
+  await functionjs.query_message_by_user(thisstoken, thisparam , resuser)
   await res.status(200).send('ok')
 })
 
