@@ -51,7 +51,6 @@ const functionjs = {
     const docRef = doc(dbstore, "userline_"+thisforcompany.name, userId)
     const docSnap = await getDoc(docRef);
     let thisuserdata = await docSnap.data()
-    
     if (docSnap.exists()) {
       if (thisuserdata.larkchatid == "pre") {
         return "creating"
@@ -67,8 +66,8 @@ const functionjs = {
         pictureurl: "pre",
         user_id: userId
       });
-      await functionjs.create_userline(thisforcompany, userId, thisstoken)
       return "creating"
+      await functionjs.create_userline(thisforcompany, userId, thisstoken)
     }
   },
   create_larkchat: async function (thisforcompany, displayName, imagekey, thisstoken) {
