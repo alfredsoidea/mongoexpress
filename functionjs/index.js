@@ -71,26 +71,39 @@ const functionjs = {
       return "creating"
     }
   },
-  create_larkchat: async function (thisforcompany, userfromline, thisstoken) {
-    console.log ("userfromline")
-    console.log (userfromline)
-  },
-  upload_avatar_lark: async function (imagefileurl, thisstoken) {
-    let imageFileData = await functionjs.file_get_contents(imagefileurl)
-    console.log("imageFileData")
-    console.log(imageFileData)
-    let response = await axios.request({
+  create_larkchat: async function (thisforcompany, displayName, imagekey, thisstoken) {
+    let response = await axios.post('https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=user_id', {
+      "name": displayName,
+      "avatar": imagekey,
+      "bot_id_list": [ thisforcompany.lark_app_api ],
+      "user_id_list": [ "693ed1af" ]
+    }, {
       headers: {
-        Authorization: `Bearer ${thisstoken}`,
-        'Content-Type': 'multipart/form-data;',
-      },
-      method: "POST",
-      url: 'https://open.larksuite.com/open-apis/im/v1/images',
-      data: {
-        image_type: 'avatar',
-        image: imageFileData
+        'Authorization': 'Bearer ' + thisstoken,
+        'Content-Type': 'application/json; charset=utf-8"' 
       }
     })
+    console.log(response)
+    return response.data.data.chat_id;
+  },
+  upload_avatar_lark: async function (imagefileurl, thisstoken) {
+    console.log("dataresult_avatar1")
+    let dataresult_avatar = await axios({ 
+      method: 'get', 
+      responseType: 'arraybuffer',
+      url: imagefileurl
+    })
+    console.log("dataresult_avatar")
+    let response = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
+      "image_type": "avatar",
+      "image": dataresult_avatar.data
+    }, {
+      headers: {
+        'Authorization': 'Bearer '+thisstoken,
+        'Content-Type': 'multipart/form-data' 
+      }
+    })
+    console.log("responselark")
     return response
   },
   check_messagestatus: async function(thisforcompany, userId) {
@@ -104,15 +117,30 @@ const functionjs = {
     console.log("you are here")
     console.log(userfromline)
 
+    let userDisplayname = userfromline.displayName
+
     const userDocRef = doc(dbstore, "userline_"+thisforcompany.name, userId);
     await runTransaction(dbstore, async (transaction) => {
       transaction.update(userDocRef, { 
-        displayname: userfromline.displayName,
+        displayname: userDisplayname,
         pictureurl: userfromline.pictureUrl
       });
     });
-    let avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl, thisstoken)
-    await functionjs.create_larkchat(thisforcompany, userfromline, thisstoken)
+
+    let avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl , thisstoken)
+    let avatarKey = avatarData.data.data.image_key
+    let newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken)
+    console.log("newlarkchatid")
+    console.log(newlarkchatid)
+    let newUserdata = await runTransaction(dbstore, async (transaction) => {
+      transaction.update(userDocRef, { 
+        larkchatid: newlarkchatid
+      })
+    })
+
+    let getCompleteUser = await functionjs.get_userline_data(thisforcompany, userId, thisstoken)
+    await functionjs.query_message_by_user(thisstoken, thisforcompany.name , getCompleteUser)
+    return newlarkchatid
   },
   get_user_from_line: async function (userId, linetoken) {
     console.log("geting linedata from " + userId)
@@ -451,7 +479,7 @@ const functionjs = {
         let bodydata = doc.data()
         bodydata.id = doc.id
         bodydata.status = 'process'
-        this.set_message_status(doc.id, forcompany, 'process')
+        functionjs.set_message_status(doc.id, forcompany, 'process')
         messagejson.push(bodydata)
       }
     });
@@ -461,7 +489,7 @@ const functionjs = {
       return itemA.init_timestamp < itemB.init_timestamp;
     });
     await jsonAsArray.forEach((doc) => {
-      this.send_message_by_userid(thisstoken, forcompany, userdata, doc)
+      functionjs.send_message_by_userid(thisstoken, forcompany, userdata, doc)
     });
     console.log("start query_message_by_user")
   },
@@ -476,10 +504,9 @@ const functionjs = {
     }
     return result;
   },
-  file_get_contents: async function(uri, callback) {
-      let res = await fetch(uri),
-      ret = await res.text(); 
-      return callback ? callback(ret) : ret; // a Promise() actually.
+  file_get_contents: async function(uri) {
+      let res = await axios.get(uri, { responseType:"blob" })
+      return res
   }
 };
 

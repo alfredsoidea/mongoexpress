@@ -68,15 +68,15 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   await allmessage.forEach((currentElement, index) => {
     console.log(currentElement.type)
     if (currentElement.type != 'unfollow') {
-      // addDoc(collection(dbstore, "message_line_"+thisparam), {
-      //   init_timestamp: currentElement.timestamp,
-      //   user_id: userId,
-      //   message_data: currentElement,
-      //   status: "wait",
-      //   forcompany: thisparam,
-      //   timestamp: serverTimestamp(),
-      //   created_at: Date.now()
-      // });
+      addDoc(collection(dbstore, "message_line_"+thisparam), {
+        init_timestamp: currentElement.timestamp,
+        user_id: userId,
+        message_data: currentElement,
+        status: "wait",
+        forcompany: thisparam,
+        timestamp: serverTimestamp(),
+        created_at: Date.now()
+      });
     }
   })
 
