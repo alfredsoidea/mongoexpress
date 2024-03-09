@@ -95,9 +95,7 @@ const functionjs = {
     let lark_app_secret = thisforcompany.lark_app_secret
     let linetoken = thisforcompany.linetoken
     let userfromline = await functionjs.get_user_from_line(userId, linetoken)
-
     let userDisplayname = userfromline.displayName
-
     const userDocRef = doc(dbstore, "userline_"+thisforcompany.name, userId);
     await runTransaction(dbstore, async (transaction) => {
       transaction.update(userDocRef, { 
@@ -450,22 +448,15 @@ const functionjs = {
     const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userId));
     const querySnapshot = await getDocs(q);
     let messagejson = [];
-    await querySnapshot.forEach((doc) => {
+    await querySnapshot.forEach(async (doc) => {
       if (doc.data().status == 'wait') {
         let bodydata = doc.data()
         bodydata.id = doc.id
         bodydata.status = 'process'
-        functionjs.set_message_status(doc.id, forcompany, 'process')
+        await functionjs.set_message_status(doc.id, forcompany, 'process')
+        await functionjs.send_message_by_userid(thisstoken, forcompany, userdata, doc.data)
         messagejson.push(bodydata)
       }
-    });
-    const jsonAsArray = await Object.keys(messagejson).map(function (key) {
-      return messagejson[key];
-    }).sort(function (itemA, itemB) {
-      return itemA.init_timestamp < itemB.init_timestamp;
-    });
-    await jsonAsArray.forEach((doc) => {
-      functionjs.send_message_by_userid(thisstoken, forcompany, userdata, doc)
     });
     console.log("start query_message_by_user")
   },
