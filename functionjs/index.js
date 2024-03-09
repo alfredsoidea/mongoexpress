@@ -22,6 +22,7 @@ const firebaseapp = initializeApp(firebaseConfig);
 import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable } from "firebase/storage";
 import { 
           getDoc,
+          onSnapshot,
           getDocs,
           where,
           orderBy,
@@ -45,24 +46,11 @@ const functionjs = {
   sayHello: function() {
     return 'Hello!';
   },
-  getUserData: async function (thisparam, userId) {
-    try {
-       let res = await axios({
-            url: 'https://larkapi.soidea.co/checkuserline/'+thisparam+'/'+userId,
-            method: 'get',
-            timeout: 15000,
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        if(res.status == 200){
-          console.log(res.status)
-        }    
-        return res
-    }
-    catch (err) {
-        console.error(err);
-    }
+  get_userline_data: async function (thisparam, userId) {
+    await onSnapshot(doc(dbstore, "userline_"+thisparam, userId), (doc) => {
+      console.log("Current data: ", doc.data());
+      return doc.data()
+    });
   },
   getForcompany: async function (thisparam) {
     const docRef = doc(dbstore, "company", thisparam);

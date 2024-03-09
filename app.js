@@ -79,10 +79,7 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
     }
   })
 
-  let resuser = await functionjs.getUserData(thisparam, userId)
-  if (resuser == "creating") {
-    
-  }
+  let resuser = await functionjs.get_userline_data(thisparam, userId)
   thisforcompany = await functionjs.getForcompany(thisparam)
   let thisstokenres = await functionjs.getTokenlark(thisforcompany)
   thisstoken = thisstokenres
