@@ -66,22 +66,24 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
 
   //set message to  firebase [status:wait]
   await allmessage.forEach((currentElement, index) => {
-    addDoc(collection(dbstore, "message_line_"+thisparam), {
-      init_timestamp: currentElement.timestamp,
-      user_id: userId,
-      message_data: currentElement,
-      status: "wait",
-      forcompany: thisparam,
-      created_at: Date.now()
-    });
+    console.log(currentElement.type)
+    if (currentElement.type != 'unfollow') {
+      addDoc(collection(dbstore, "message_line_"+thisparam), {
+        init_timestamp: currentElement.timestamp,
+        user_id: userId,
+        message_data: currentElement,
+        status: "wait",
+        forcompany: thisparam,
+        created_at: Date.now()
+      });
+    }
   })
 
   let resuser = await functionjs.getUserData(thisparam, userId)
-  console.log("resuser")
-  console.log(resuser)
+  if (resuser == "creating") {
+    
+  }
   thisforcompany = await functionjs.getForcompany(thisparam)
-  console.log("thisforcompany")
-  console.log(thisforcompany)
   let thisstokenres = await functionjs.getTokenlark(thisforcompany)
   thisstoken = thisstokenres
   await functionjs.query_message_by_user(thisstoken, thisparam , resuser.data)
