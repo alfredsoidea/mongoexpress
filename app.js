@@ -100,6 +100,9 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
       pictureurl: "pre",
       user_id: userId
     });
+    thisforcompany = await functionjs.getForcompany(thisparam)
+    thisstokenres = await functionjs.getTokenlark(thisforcompany)
+    thisstoken = thisstokenres
     await allmessage.forEach((currentElement, index) => {
       if (currentElement.type != 'unfollow') {
         addDoc(collection(dbstore, "message_line_"+thisparam), {
