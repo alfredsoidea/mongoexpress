@@ -38,7 +38,8 @@ import {
           increment,
           getFirestore,
           collection,
-          runTransaction
+          runTransaction,
+          serverTimestamp
 } from "firebase/firestore";
 
 const storage = getStorage();
@@ -67,23 +68,29 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   await allmessage.forEach((currentElement, index) => {
     console.log(currentElement.type)
     if (currentElement.type != 'unfollow') {
-      addDoc(collection(dbstore, "message_line_"+thisparam), {
-        init_timestamp: currentElement.timestamp,
-        user_id: userId,
-        message_data: currentElement,
-        status: "wait",
-        forcompany: thisparam,
-        created_at: Date.now()
-      });
+      // addDoc(collection(dbstore, "message_line_"+thisparam), {
+      //   init_timestamp: currentElement.timestamp,
+      //   user_id: userId,
+      //   message_data: currentElement,
+      //   status: "wait",
+      //   forcompany: thisparam,
+      //   timestamp: serverTimestamp(),
+      //   created_at: Date.now()
+      // });
     }
   })
 
   let thisforcompany = await functionjs.getForcompany(thisparam)
-  let resuser = await functionjs.get_userline_data(thisforcompany, userId)
   let thisstokenres = await functionjs.getTokenlark(thisforcompany)
   thisstoken = thisstokenres
-  await functionjs.query_message_by_user(thisstoken, thisparam , resuser)
-  await res.status(200).send('ok')
+  let resuser = await functionjs.get_userline_data(thisforcompany, userId, thisstoken)
+  if (resuser == "creating") {
+    await functionjs.check_messagestatus(thisforcompany, userId)
+    await res.status(200).send('ok')
+  } {
+    await functionjs.query_message_by_user(thisstoken, thisparam , resuser)
+    await res.status(200).send('ok')
+  }
 })
 
 app.post('/line-checkdata/:forcompany', async (req, res) => {

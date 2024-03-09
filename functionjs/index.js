@@ -47,13 +47,19 @@ const functionjs = {
   sayHello: function() {
     return 'Hello!';
   },
-  get_userline_data: async function (thisforcompany, userId) {
-    const docRef = doc(dbstore, "userline_"+tthisforcompany.name, userId)
+  get_userline_data: async function (thisforcompany, userId, thisstoken) {
+    const docRef = doc(dbstore, "userline_"+thisforcompany.name, userId)
     const docSnap = await getDoc(docRef);
+    let thisuserdata = await docSnap.data()
+    
     if (docSnap.exists()) {
-      return docSnap.data()
+      if (thisuserdata.larkchatid == "pre") {
+        return "creating"
+      } else {
+        return thisuserdata
+      }
     } else {
-      addDoc(collection(dbstore, "userline"+thisparam, userId), {
+      await setDoc(doc(dbstore, "userline_"+thisforcompany.name, userId), {
         forcompany: thisforcompany.name,
         timestamp: serverTimestamp(),
         displayname: "pre",
@@ -61,13 +67,71 @@ const functionjs = {
         pictureurl: "pre",
         user_id: userId
       });
+      await functionjs.create_userline(thisforcompany, userId, thisstoken)
+      return "creating"
     }
-    
+  },
+  create_larkchat: async function (thisforcompany, userfromline, thisstoken) {
+    console.log ("userfromline")
+    console.log (userfromline)
+  },
+  upload_avatar_lark: async function (imagefileurl, thisstoken) {
+    let imageFileData = await functionjs.file_get_contents(imagefileurl)
+    console.log("imageFileData")
+    console.log(imageFileData)
+    let response = await axios.request({
+      headers: {
+        Authorization: `Bearer ${thisstoken}`,
+        'Content-Type': 'multipart/form-data;',
+      },
+      method: "POST",
+      url: 'https://open.larksuite.com/open-apis/im/v1/images',
+      data: {
+        image_type: 'avatar',
+        image: imageFileData
+      }
+    })
+    return response
+  },
+  check_messagestatus: async function(thisforcompany, userId) {
+  },
+  create_userline: async function(thisforcompany, userId, thisstoken) {
+    console.log("functionjscreate_userline")
+    let lark_app_api = thisforcompany.lark_app_api
+    let lark_app_secret = thisforcompany.lark_app_secret
+    let linetoken = thisforcompany.linetoken
+    let userfromline = await functionjs.get_user_from_line(userId, linetoken)
+    console.log("you are here")
+    console.log(userfromline)
+
+    const userDocRef = doc(dbstore, "userline_"+thisforcompany.name, userId);
+    await runTransaction(dbstore, async (transaction) => {
+      transaction.update(userDocRef, { 
+        displayname: userfromline.displayName,
+        pictureurl: userfromline.pictureUrl
+      });
+    });
+    let avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl, thisstoken)
+    await functionjs.create_larkchat(thisforcompany, userfromline, thisstoken)
+  },
+  get_user_from_line: async function (userId, linetoken) {
+    console.log("geting linedata from " + userId)
+    let response = await axios.request({
+      headers: {
+        Authorization: `Bearer ${linetoken}`,
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+      method: "GET",
+      url: 'https://api.line.me/v2/bot/profile/' + userId
+    })
+    let linedata = response.data
+    return linedata
   },
   getForcompany: async function (thisparam) {
-    const docRef = doc(dbstore, "company", thisparam);
+    const docRef = await doc(dbstore, "company", thisparam);
     const docSnap = await getDoc(docRef);
-    return docSnap.data()
+    let thisdata = await docSnap.data()
+    return thisdata
   },
   getTokenlark: async function (thisforcompany) {
     let datares  = await axios.post('https://open.larksuite.com/open-apis/auth/v3/tenant_access_token/internal', {
@@ -377,7 +441,6 @@ const functionjs = {
     }
   },
   query_message_by_user: async function (thisstoken, forcompany, userdata) {
-    console.log("userdatatest")
     let userId = userdata.user_id
     let dataref = collection(dbstore, "message_line_"+forcompany)
     const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userId));
@@ -412,6 +475,11 @@ const functionjs = {
       counter += 1;
     }
     return result;
+  },
+  file_get_contents: async function(uri, callback) {
+      let res = await fetch(uri),
+      ret = await res.text(); 
+      return callback ? callback(ret) : ret; // a Promise() actually.
   }
 };
 
