@@ -51,24 +51,6 @@ const functionjs = {
     const docRef = doc(dbstore, "userline_"+thisforcompany.name, userId)
     const docSnap = await getDoc(docRef);
     let thisuserdata = await docSnap.data()
-    if (docSnap.exists()) {
-      if (thisuserdata.larkchatid == "pre") {
-        return "creating"
-      } else {
-        return thisuserdata
-      }
-    } else {
-      await setDoc(doc(dbstore, "userline_"+thisforcompany.name, userId), {
-        forcompany: thisforcompany.name,
-        timestamp: serverTimestamp(),
-        displayname: "pre",
-        larkchatid: "pre",
-        pictureurl: "pre",
-        user_id: userId
-      });
-      return "creating"
-      await functionjs.create_userline(thisforcompany, userId, thisstoken)
-    }
   },
   create_larkchat: async function (thisforcompany, displayName, imagekey, thisstoken) {
     let response = await axios.post('https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=user_id', {
@@ -113,8 +95,6 @@ const functionjs = {
     let lark_app_secret = thisforcompany.lark_app_secret
     let linetoken = thisforcompany.linetoken
     let userfromline = await functionjs.get_user_from_line(userId, linetoken)
-    console.log("you are here")
-    console.log(userfromline)
 
     let userDisplayname = userfromline.displayName
 
@@ -129,14 +109,11 @@ const functionjs = {
     let avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl , thisstoken)
     let avatarKey = avatarData.data.data.image_key
     let newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken)
-    console.log("newlarkchatid")
-    console.log(newlarkchatid)
     let newUserdata = await runTransaction(dbstore, async (transaction) => {
       transaction.update(userDocRef, { 
         larkchatid: newlarkchatid
       })
     })
-
     let getCompleteUser = await functionjs.get_userline_data(thisforcompany, userId, thisstoken)
     await functionjs.query_message_by_user(thisstoken, thisforcompany.name , getCompleteUser)
     return newlarkchatid

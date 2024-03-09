@@ -57,37 +57,63 @@ app.get('/', (req, res) => {
 });
 
 app.post('/line/webhook/:forcompany', async (req, res) => {
+  let resuser,thisforcompany,thisstokenres
   let thisparam = req.params.forcompany
   let requestbody = req.body
-  console.log(JSON.stringify(req.body))
+  //console.log(JSON.stringify(req.body))
   let allmessage = requestbody['events']
   let userId = allmessage[0]['source']['userId']
   let thisstoken
-
-  //set message to  firebase [status:wait]
-
-  let thisforcompany = await functionjs.getForcompany(thisparam)
-  let thisstokenres = await functionjs.getTokenlark(thisforcompany)
-  thisstoken = thisstokenres
-  let resuser = await functionjs.get_userline_data(thisforcompany, userId, thisstoken)
-  await allmessage.forEach((currentElement, index) => {
-    if (currentElement.type != 'unfollow') {
-      addDoc(collection(dbstore, "message_line_"+thisparam), {
-        init_timestamp: currentElement.timestamp,
-        user_id: userId,
-        message_data: currentElement,
-        status: "wait",
-        forcompany: thisparam,
-        timestamp: serverTimestamp(),
-        created_at: Date.now()
-      });
+  const docRef = doc(dbstore, "userline_"+thisparam, userId)
+  const docSnap = await getDoc(docRef);
+  let thisuserdata = await docSnap.data()
+  if (docSnap.exists()) {
+    await allmessage.forEach((currentElement, index) => {
+      if (currentElement.type != 'unfollow') {
+        addDoc(collection(dbstore, "message_line_"+thisparam), {
+          init_timestamp: currentElement.timestamp,
+          user_id: userId,
+          message_data: currentElement,
+          status: "wait",
+          forcompany: thisparam,
+          timestamp: serverTimestamp(),
+          created_at: Date.now()
+        });
+      }
+    })
+    if (thisuserdata.larkchatid == "pre") {
+      await res.status(200).send('ok')
+    } else {
+      resuser = await functionjs.get_userline_data(thisforcompany, userId, thisstoken)
+      thisforcompany = await functionjs.getForcompany(thisparam)
+      thisstokenres = await functionjs.getTokenlark(thisforcompany)
+      thisstoken = thisstokenres
+      await functionjs.query_message_by_user(thisstoken, thisparam , resuser)
+      await res.status(200).send('ok')
     }
-  })
-  if (resuser == "creating") {
-    await res.status(200).send('ok')
-  }
-  if (resuser != "creating" && resuser) {
-    await functionjs.query_message_by_user(thisstoken, thisparam , resuser)
+  } else {
+    await setDoc(doc(dbstore, "userline_"+thisparam, userId), {
+      forcompany: thisparam,
+      timestamp: serverTimestamp(),
+      displayname: "pre",
+      larkchatid: "pre",
+      pictureurl: "pre",
+      user_id: userId
+    });
+    await allmessage.forEach((currentElement, index) => {
+      if (currentElement.type != 'unfollow') {
+        addDoc(collection(dbstore, "message_line_"+thisparam), {
+          init_timestamp: currentElement.timestamp,
+          user_id: userId,
+          message_data: currentElement,
+          status: "wait",
+          forcompany: thisparam,
+          timestamp: serverTimestamp(),
+          created_at: Date.now()
+        });
+      }
+    })
+    await functionjs.create_userline(thisforcompany, userId, thisstoken)
     await res.status(200).send('ok')
   }
 })
