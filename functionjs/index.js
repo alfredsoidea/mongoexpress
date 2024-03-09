@@ -454,7 +454,7 @@ const functionjs = {
         bodydata.id = doc.id
         bodydata.status = 'process'
         await functionjs.set_message_status(doc.id, forcompany, 'process')
-        await functionjs.send_message_by_userid(thisstoken, forcompany, userdata, doc.data)
+        await functionjs.send_message_by_userid(thisstoken, forcompany, userdata, doc.data())
         messagejson.push(bodydata)
       }
     });
