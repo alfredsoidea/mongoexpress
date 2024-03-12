@@ -189,7 +189,7 @@ const functionjs = {
         functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
         break;
       case 'audio':
-        let dataresultvideo = await axios({ 
+        let dataresultaudio = await axios({ 
           method: 'get', 
           responseType: 'arraybuffer',
           url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
@@ -198,13 +198,13 @@ const functionjs = {
           }
         })
 
-        let fileData = dataresultvideo.data
+        let fileDataaudio = dataresultaudio.data
 
-        let dataresultsentvideo = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
+        let dataresultsentaudio = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
           "file_type": "mp4",
           "file_name": "audio_"+functionjs.makeid(20)+".mp4",
           "duration": contentdata.message.duration,
-          "file": fileData
+          "file": fileDataaudio
         }, {
           headers: {
             'Authorization': 'Bearer '+thisstoken,
@@ -212,12 +212,12 @@ const functionjs = {
           }
         })
 
-        //sending video message
+        //sending audio message
         datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
           "receive_id": userdata.larkchatid,
-          "msg_type": "media",
+          "msg_type": "audio",
           "content": JSON.stringify({
-            "file_key": dataresultsentvideo.data.data.file_key
+            "file_key": dataresultsentaudio.data.data.file_key
           })
         }, {
           headers: {
@@ -245,7 +245,6 @@ const functionjs = {
         let dataresultsentvideo = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
           "file_type": "mp4",
           "file_name": "video_"+functionjs.makeid(20)+".mp4",
-          "duration": contentdata.message.duration,
           "file": fileData
         }, {
           headers: {
@@ -277,6 +276,7 @@ const functionjs = {
         datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
           "receive_id": userdata.larkchatid,
           "msg_type": "media",
+          "duration": contentdata.message.duration,
           "content": JSON.stringify({
             "image_key": videoPrev.data.data.image_key,
             "file_key": dataresultsentvideo.data.data.file_key,
@@ -312,7 +312,6 @@ const functionjs = {
         datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
           "receive_id": userdata.larkchatid,
           "msg_type": "image",
-          "duration": contentdata.message.duration,
           "content": JSON.stringify({
             "image_key": dataresultsent.data.data.image_key
           })
