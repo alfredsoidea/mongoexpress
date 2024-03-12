@@ -118,7 +118,10 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
         });
       }
     })
-    await functionjs.create_userline(thisforcompany, userId, thisstoken)
+    let responsecreate = await functionjs.create_userline(thisforcompany, userId, thisstoken)
+    console.log(responsecreate)
+    let responsequery = await functionjs.query_message_by_user(thisstoken, thisforcompany , userId)
+    console.log(responsequery)
     await res.status(200).send('ok')
   }
 })

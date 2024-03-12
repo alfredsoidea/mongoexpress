@@ -124,7 +124,6 @@ const functionjs = {
         larkchatid: newlarkchatid
       })
     })
-    await functionjs.query_message_by_user(thisstoken, thisforcompany , userId)
     return newlarkchatid
   },
   get_user_from_line: async function (userId, linetoken) {
