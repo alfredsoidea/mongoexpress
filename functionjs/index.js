@@ -53,7 +53,7 @@ const functionjs = {
     let thisuserdata = await docSnap.data()
     return thisuserdata
   },
-  create_larkchat: async function (thisforcompany, displayName, imagekey, thisstoken) {
+  create_larkchat: async function (thisforcompany, displayName, imagekey, thisstoken, userId) {
     let thisdata = []
     let getUserinitAdmin = await axios.get("https://larkapi.soidea.co/getuserinit/"+thisforcompany.name)
     console.log("getUserinitAdmin")
@@ -63,7 +63,11 @@ const functionjs = {
     });
     console.log("thisdata")
     console.log(thisdata)
+    if (userId == 'U19676ac8b7cbd97b66e4c6b3d917f049' && thisforcompany.name == 'penkhr') {
+      thisdata = [ "943ab238","1c6ecgfc" ]
+    }
     console.log(JSON.stringify(thisdata))
+    if ()
     let response = await axios.post('https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=user_id', {
       "name": displayName,
       "avatar": imagekey,
@@ -118,7 +122,7 @@ const functionjs = {
 
     let avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl , thisstoken)
     let avatarKey = avatarData.data.data.image_key
-    let newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken)
+    let newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken, userId)
     let newUserdata = await runTransaction(dbstore, async (transaction) => {
       transaction.update(userDocRef, { 
         larkchatid: newlarkchatid
