@@ -201,8 +201,7 @@ const functionjs = {
         let fileDataaudio = dataresultaudio.data
 
         let dataresultsentaudio = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
-          "file_type": "mp4",
-          "file_name": "audio_"+functionjs.makeid(20)+".mp4",
+          "file_type": "opus",
           "duration": contentdata.message.duration,
           "file": fileDataaudio
         }, {
@@ -211,14 +210,15 @@ const functionjs = {
             'Content-Type': 'multipart/form-data' 
           }
         })
-
+        console.log("dataresultsentaudio")
+        console.log(dataresultsentaudio)
         //sending audio message
         datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
           "receive_id": userdata.larkchatid,
-          "msg_type": "audio",
           "content": JSON.stringify({
             "file_key": dataresultsentaudio.data.data.file_key
-          })
+          }),
+          "msg_type": "audio"
         }, {
           headers: {
             'Authorization': 'Bearer '+thisstoken,
