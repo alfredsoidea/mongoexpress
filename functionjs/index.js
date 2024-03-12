@@ -501,18 +501,33 @@ const functionjs = {
       console.log('Transaction failure:', e);
     }
   },
+  compareBytime: function(a, b) {
+    if (a.init_timestamp < b.init_timestamp) {
+      return -1;
+    }
+    if (a.init_timestamp > b.init_timestamp) {
+      return 1;
+    }
+    return 0;
+  },
   query_message_by_user: async function (thisstoken, thisforcompany, userId) {
     let dataref = collection(dbstore, "message_line_"+thisforcompany.name)
     const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userId), orderBy("init_timestamp") );
     const querySnapshot = await getDocs(q);
-    //let messagejson = [];
-    //console.log(thisforcompany)
+    let newdatajson = []
     await querySnapshot.forEach(async (doc) => {
       let bodydata = doc.data()
       bodydata.id = doc.id
-      console.log(bodydata)
-      await functionjs.send_message_by_userid(thisstoken, thisforcompany, userId, bodydata)
-      //messagejson.push(bodydata)
+      newdatajson.push(bodydata)
+    });
+
+    newdatajson.sort(functionjs.compareBytime);
+    console.log(newdatajson)
+
+    //let messagejson = [];
+    //console.log(thisforcompany)
+    await newdatajson.forEach(async (element) => {
+      await functionjs.send_message_by_userid(thisstoken, thisforcompany, userId, element)
     });
     console.log("start query_message_by_user")
   },
