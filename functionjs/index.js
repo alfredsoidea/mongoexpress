@@ -54,11 +54,17 @@ const functionjs = {
     return thisuserdata
   },
   create_larkchat: async function (thisforcompany, displayName, imagekey, thisstoken) {
+    let thisdata = []
+    let getUserinitAdmin = await axios.get("https://larkapi.soidea.co/getuserinit/"+thisforcompany.name)
+    console.log("getUserinitAdmin")
+    await getUserinitAdmin.data.forEach((element) => {
+      thisdata.push(element.userlark_id)
+    });
     let response = await axios.post('https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=user_id', {
       "name": displayName,
       "avatar": imagekey,
       "bot_id_list": [ thisforcompany.lark_app_api ],
-      "user_id_list": [ "693ed1af", "e5ac2d23" ]
+      "user_id_list": thisdata
     }, {
       headers: {
         'Authorization': 'Bearer ' + thisstoken,
@@ -108,6 +114,7 @@ const functionjs = {
     let avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl , thisstoken)
     let avatarKey = avatarData.data.data.image_key
     let newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken)
+    let getUserinitAdmin = await axios.get("https://larkapi.soidea.co/getuserinit/penkhr")
     let newUserdata = await runTransaction(dbstore, async (transaction) => {
       transaction.update(userDocRef, { 
         larkchatid: newlarkchatid
