@@ -505,19 +505,14 @@ const functionjs = {
     let dataref = collection(dbstore, "message_line_"+thisforcompany.name)
     const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userId), orderBy("init_timestamp") );
     const querySnapshot = await getDocs(q);
-    let newdatajson = []
+    //let messagejson = [];
+    //console.log(thisforcompany)
     await querySnapshot.forEach(async (doc) => {
       let bodydata = doc.data()
       bodydata.id = doc.id
-      newdatajson.push(bodydata)
-    });
-    await newdatajson.sort(function (a, b) {
-        return a.init_timestamp.localeCompare(b.name);
-    });
-    //let messagejson = [];
-    //console.log(thisforcompany)
-    await newdatajson.forEach(async (element) => {
-      await functionjs.send_message_by_userid(thisstoken, thisforcompany, userId, element)
+      console.log(bodydata)
+      await functionjs.send_message_by_userid(thisstoken, thisforcompany, userId, bodydata)
+      //messagejson.push(bodydata)
     });
     console.log("start query_message_by_user")
   },
