@@ -163,7 +163,7 @@ const functionjs = {
     let datareturn = ""
     let userdataref = doc(dbstore, "userline_"+thisforcompany.name, userId);
     let userdataget = await getDoc(userdataref);
-    let userdata = userdataget.data()
+    let userdata = await userdataget.data()
     console.log(userdata)
 
     await functionjs.set_message_status(datamessagekey, thisforcompany, 'process')
@@ -182,7 +182,7 @@ const functionjs = {
             'Accept': 'application/json'
           }
         })
-        functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
         break;
       case 'sticker':
         datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
@@ -196,7 +196,7 @@ const functionjs = {
             'Accept': 'application/json'
           }
         })
-        functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
         break;
       case 'audio':
         let dataresultaudio = await axios({ 
@@ -237,7 +237,7 @@ const functionjs = {
           }
         })
 
-        functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
         break;
       case 'video':
         console.log('video')
@@ -299,7 +299,7 @@ const functionjs = {
           }
         })
 
-        functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
         break;
       case 'image':
         var dataresult = await axios({ 
@@ -332,7 +332,7 @@ const functionjs = {
             'Accept': 'application/json'
           }
         })
-        functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
         break;
       default:
     }
