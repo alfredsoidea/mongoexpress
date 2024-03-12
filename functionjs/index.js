@@ -63,6 +63,7 @@ const functionjs = {
     });
     console.log("thisdata")
     console.log(thisdata)
+    console.log(JSON.stringify(thisdata))
     let response = await axios.post('https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=user_id', {
       "name": displayName,
       "avatar": imagekey,
@@ -74,6 +75,7 @@ const functionjs = {
         'Content-Type': 'application/json; charset=utf-8"' 
       }
     })
+    console.log("responsenow")
     console.log(response)
     return response.data.data.chat_id;
   },
