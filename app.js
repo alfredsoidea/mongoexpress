@@ -124,15 +124,15 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   }
 })
 
-app.post('/lark/webhook/:forcompany', async (req, res) => {
+app.post('/lark/webhook/:forcompany', (req, res) => {
   let resuser,thisforcompany,thisstokenres
   let thisparam = req.params.forcompany
   let requestbody = req.body
   if (requestbody.type == "url_verification") {
     if (requestbody.challenge) {
-      await res.status(200).send({ "challenge": requestbody.challenge })
     }
   }
+  res.status(200).send({ "challenge": requestbody.challenge })
 })
 
 app.post('/line-checkdata/:forcompany', async (req, res) => {
