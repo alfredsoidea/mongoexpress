@@ -124,6 +124,16 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   }
 })
 
+app.post('/lark/webhook/:forcompany', async (req, res) => {
+  let resuser,thisforcompany,thisstokenres
+  let thisparam = req.params.forcompany
+  let requestbody = req.body
+  console.log(JSON.stringify(req.body))
+  if (req.body.chellenge) {
+    return { "challenge": req.body.chellenge }
+  }
+})
+
 app.post('/line-checkdata/:forcompany', async (req, res) => {
   let thisparam = req.params.forcompany
   let thisforcompany = await axios.get('https://larkapi.soidea.co/getforcompany/'+thisparam);
