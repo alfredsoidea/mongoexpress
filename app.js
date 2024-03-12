@@ -60,7 +60,7 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   let resuser,thisforcompany,thisstokenres
   let thisparam = req.params.forcompany
   let requestbody = req.body
-  //console.log(JSON.stringify(req.body))
+  console.log(JSON.stringify(req.body))
   let allmessage = requestbody['events']
   let userId = allmessage[0]['source']['userId']
   let thisstoken
