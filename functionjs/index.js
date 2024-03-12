@@ -60,6 +60,7 @@ const functionjs = {
     await getUserinitAdmin.data.forEach((element) => {
       thisdata.push(element.userlark_id)
     });
+    conole.log(thisdata)
     let response = await axios.post('https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=user_id', {
       "name": displayName,
       "avatar": imagekey,
@@ -114,7 +115,6 @@ const functionjs = {
     let avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl , thisstoken)
     let avatarKey = avatarData.data.data.image_key
     let newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken)
-    let getUserinitAdmin = await axios.get("https://larkapi.soidea.co/getuserinit/penkhr")
     let newUserdata = await runTransaction(dbstore, async (transaction) => {
       transaction.update(userDocRef, { 
         larkchatid: newlarkchatid
