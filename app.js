@@ -129,6 +129,7 @@ app.post('/lark/webhook/:forcompany', async (req, res) => {
   let thisparam = req.params.forcompany
   let requestbody = req.body
   console.log(JSON.stringify(req.body))
+  console.log({ "challenge": req.body.chellenge })
   if (req.body.chellenge) {
     return { "challenge": req.body.chellenge }
   }
