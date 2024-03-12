@@ -128,11 +128,14 @@ app.post('/lark/webhook/:forcompany', (req, res) => {
   let resuser,thisforcompany,thisstokenres
   let thisparam = req.params.forcompany
   let requestbody = req.body
+  console.log(JSON.stringify(req.body))
   if (requestbody.type == "url_verification") {
     if (requestbody.challenge) {
     }
   } else {
-    console.log(requestbody)
+    let messageraw = requestbody['event']
+    messageraw = messageraw.message
+
   }
   res.status(200).send({ "challenge": requestbody.challenge })
 })
