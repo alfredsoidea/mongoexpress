@@ -131,6 +131,8 @@ app.post('/lark/webhook/:forcompany', (req, res) => {
   if (requestbody.type == "url_verification") {
     if (requestbody.challenge) {
     }
+  } else {
+    console.log(requestbody)
   }
   res.status(200).send({ "challenge": requestbody.challenge })
 })
