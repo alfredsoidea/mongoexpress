@@ -158,7 +158,6 @@ const functionjs = {
     return datares.data.tenant_access_token;
   },
   send_message_by_userid: async function (thisstoken, thisforcompany, userId, datamessage) {
-    //console.log("await userdata.data() start")
     let linetoken = thisforcompany.linetoken
     let thismessagetype = datamessage.message_data.message.type
     let datamessagekey = datamessage.id
@@ -167,7 +166,6 @@ const functionjs = {
     let userdataref = doc(dbstore, "userline_"+thisforcompany.name, userId);
     let userdataget = await getDoc(userdataref);
     let userdata = await userdataget.data()
-    console.log(userdata)
 
     await functionjs.set_message_status(datamessagekey, thisforcompany, 'process')
 
@@ -211,7 +209,7 @@ const functionjs = {
           }
         })
 
-        let fileDataaudio = dataresultaudio.data
+        let fileDataaudio = await dataresultaudio.data
 
         let dataresultsentaudio = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
           "file_type": "opus",
@@ -505,16 +503,21 @@ const functionjs = {
   },
   query_message_by_user: async function (thisstoken, thisforcompany, userId) {
     let dataref = collection(dbstore, "message_line_"+thisforcompany.name)
-    const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userId));
+    const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userId), orderBy("init_timestamp") );
     const querySnapshot = await getDocs(q);
-    //let messagejson = [];
-    //console.log(thisforcompany)
+    let newdatajson = []
     await querySnapshot.forEach(async (doc) => {
       let bodydata = doc.data()
       bodydata.id = doc.id
-      console.log(bodydata)
-      await functionjs.send_message_by_userid(thisstoken, thisforcompany, userId, bodydata)
-      //messagejson.push(bodydata)
+      newdatajson.push(bodydata)
+    });
+    await newdatajson.sort(function (a, b) {
+        return a.init_timestamp.localeCompare(b.name);
+    });
+    //let messagejson = [];
+    //console.log(thisforcompany)
+    await newdatajson.forEach(async (element) => {
+      await functionjs.send_message_by_userid(thisstoken, thisforcompany, userId, element)
     });
     console.log("start query_message_by_user")
   },
