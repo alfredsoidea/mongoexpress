@@ -59,9 +59,10 @@ const functionjs = {
     console.log("getUserinitAdmin")
     await getUserinitAdmin.data.forEach((element) => {
       thisdata.push(element.userlark_id)
+      console.log(element)
     });
-    conole.log("thisdata")
-    conole.log(thisdata)
+    console.log("thisdata")
+    console.log(thisdata)
     let response = await axios.post('https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=user_id', {
       "name": displayName,
       "avatar": imagekey,
