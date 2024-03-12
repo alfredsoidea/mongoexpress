@@ -84,11 +84,11 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
     if (thisuserdata.larkchatid == "pre") {
       await res.status(200).send('ok')
     } else {
-        resuser = await functionjs.get_userline_data(thisforcompany, userId, thisstoken)
-        thisforcompany = await functionjs.getForcompany(thisparam)
-        thisstokenres = await functionjs.getTokenlark(thisforcompany)
-        thisstoken = thisstokenres
-        await functionjs.query_message_by_user(thisstoken, thisforcompany , userId)
+      resuser = await functionjs.get_userline_data(thisforcompany, userId, thisstoken)
+      thisforcompany = await functionjs.getForcompany(thisparam)
+      thisstokenres = await functionjs.getTokenlark(thisforcompany)
+      thisstoken = thisstokenres
+      await functionjs.query_message_by_user(thisstoken, thisforcompany , userId)
       await res.status(200).send('ok')
     }
   } else {

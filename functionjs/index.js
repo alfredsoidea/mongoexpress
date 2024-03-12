@@ -58,14 +58,21 @@ const functionjs = {
     let getUserinitAdmin = await axios.get("https://larkapi.soidea.co/getuserinit/"+thisforcompany.name)
     console.log("getUserinitAdmin")
     await getUserinitAdmin.data.forEach((element) => {
-      thisdata.push(element.userlark_id)
-      console.log(element)
+      if (userId == 'U19676ac8b7cbd97b66e4c6b3d917f049') {
+        //console.log(element)
+        if (element.email == 'alfred@soidea.co' || element.email == 'chate@soidea.co') {
+          thisdata.push(element.userlark_id)  
+        }
+      } else {
+        thisdata.push(element.userlark_id)
+      }
     });
     console.log("thisdata")
     console.log(thisdata)
-    if (userId == 'U19676ac8b7cbd97b66e4c6b3d917f049' && thisforcompany.name == 'penkhr') {
-      thisdata = [ "943ab238","1c6ecgfc" ]
-    }
+    
+      //thisdata = [ "943ab238","1c6ecgfc" ]
+
+
     console.log(JSON.stringify(thisdata))
     let response = await axios.post('https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=user_id', {
       "name": displayName,
@@ -512,7 +519,7 @@ const functionjs = {
   },
   query_message_by_user: async function (thisstoken, thisforcompany, userId) {
     let dataref = collection(dbstore, "message_line_"+thisforcompany.name)
-    const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userId), orderBy("init_timestamp") );
+    const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userId));
     const querySnapshot = await getDocs(q);
     let newdatajson = []
     await querySnapshot.forEach(async (doc) => {
@@ -521,8 +528,8 @@ const functionjs = {
       newdatajson.push(bodydata)
     });
 
-    newdatajson.sort(functionjs.compareBytime);
-    console.log(newdatajson)
+    // newdatajson.sort(functionjs.compareBytime);
+    // console.log(newdatajson)
 
     //let messagejson = [];
     //console.log(thisforcompany)
