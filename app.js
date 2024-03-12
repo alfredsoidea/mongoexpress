@@ -128,10 +128,11 @@ app.post('/lark/webhook/:forcompany', async (req, res) => {
   let resuser,thisforcompany,thisstokenres
   let thisparam = req.params.forcompany
   let requestbody = req.body
-  console.log(JSON.stringify(req.body))
+  console.log(req.body.challenge)
+  //let thisbody = JSON.parse(req.body)
   console.log({ "challenge": req.body.challenge })
   if (req.body.challenge) {
-    return { "challenge": req.body.challenge }
+    await res.status(200).send({ "challenge": req.body.challenge })
   }
 })
 
