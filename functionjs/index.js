@@ -60,6 +60,7 @@ const functionjs = {
     await getUserinitAdmin.data.forEach((element) => {
       thisdata.push(element.userlark_id)
     });
+    conole.log("thisdata")
     conole.log(thisdata)
     let response = await axios.post('https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=user_id', {
       "name": displayName,
