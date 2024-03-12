@@ -188,6 +188,47 @@ const functionjs = {
         })
         functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
         break;
+      case 'audio':
+        let dataresultvideo = await axios({ 
+          method: 'get', 
+          responseType: 'arraybuffer',
+          url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
+          headers: { 
+            'Authorization': 'Bearer '+linetoken
+          }
+        })
+
+        let fileData = dataresultvideo.data
+
+        let dataresultsentvideo = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
+          "file_type": "mp4",
+          "file_name": "audio_"+functionjs.makeid(20)+".mp4",
+          "duration": contentdata.message.duration,
+          "file": fileData
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'multipart/form-data' 
+          }
+        })
+
+        //sending video message
+        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+          "receive_id": userdata.larkchatid,
+          "msg_type": "media",
+          "content": JSON.stringify({
+            "file_key": dataresultsentvideo.data.data.file_key
+          })
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+
+        functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        break;
       case 'video':
         console.log('video')
         let dataresultvideo = await axios({ 
@@ -271,6 +312,7 @@ const functionjs = {
         datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
           "receive_id": userdata.larkchatid,
           "msg_type": "image",
+          "duration": contentdata.message.duration,
           "content": JSON.stringify({
             "image_key": dataresultsent.data.data.image_key
           })
