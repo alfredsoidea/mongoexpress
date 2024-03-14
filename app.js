@@ -124,20 +124,29 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   }
 })
 
-app.post('/lark/webhook/:forcompany', (req, res) => {
-  let resuser,thisforcompany,thisstokenres
+app.post('/lark/webhook/:forcompany', async (req, res) => {
+  let thisforcompany,thisstokenres
   let thisparam = req.params.forcompany
   let requestbody = req.body
   console.log(JSON.stringify(req.body))
   if (requestbody.type == "url_verification") {
     if (requestbody.challenge) {
+      res.status(200).send({ "challenge": requestbody.challenge })
     }
   } else {
     let messageraw = requestbody['event']
-    messageraw = messageraw.message
-
+    let resuser = await functionjs.get_userline_data_larkchat(thisforcompany, , thisstoken)
+    addDoc(collection(dbstore, "message_lark_"+thisparam), {
+      init_timestamp: currentElement.timestamp,
+      user_id: resuser.user_id,
+      message_data: messageraw.message,
+      status: "wait",
+      forcompany: thisparam,
+      timestamp: serverTimestamp(),
+      created_at: Date.now()
+    });
+    res.status(200).send("ok")
   }
-  res.status(200).send({ "challenge": requestbody.challenge })
 })
 
 app.post('/line-checkdata/:forcompany', async (req, res) => {
