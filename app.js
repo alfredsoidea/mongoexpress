@@ -117,7 +117,6 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
       }
     })
     let responsecreate = await functionjs.create_userline(thisforcompany, userId, thisstoken)
-    /edit-larkchat/:forcompany/:userId/:larkchatid
     console.log(responsecreate)
     let responsequery = await functionjs.query_message_by_user(thisstoken, thisforcompany , userId)
     console.log(responsequery)
