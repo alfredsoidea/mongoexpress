@@ -519,7 +519,7 @@ const functionjs = {
   },
   query_message_by_user: async function (thisstoken, thisforcompany, userId) {
     let dataref = collection(dbstore, "message_line_"+thisforcompany.name)
-    const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userId), orderBy("init_timestamp") );
+    const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userId) );
     const querySnapshot = await getDocs(q);
     let newdatajson = []
     await querySnapshot.forEach(async (doc) => {
