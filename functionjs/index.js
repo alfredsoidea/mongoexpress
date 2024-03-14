@@ -135,10 +135,7 @@ const functionjs = {
         larkchatid: newlarkchatid
       })
     })
-    let setolder = await axios({ 
-      method: 'get', 
-      url: 'https://larkapi.soidea.co/edit-larkchat/'+thisforcompany.name+'/'+userId+'/'+newlarkchatid
-    })
+    let setolder = await axios.get('https://larkapi.soidea.co/edit-larkchat/'+thisforcompany.name+'/'+userId+'/'+newlarkchatid)
     return newlarkchatid
   },
   get_user_from_line: async function (userId, linetoken) {
