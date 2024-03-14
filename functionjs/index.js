@@ -67,7 +67,6 @@ const functionjs = {
         thisdata.push(element.userlark_id)
       }
     });
-
     console.log("thisdata")
     console.log(thisdata)
     
@@ -135,7 +134,6 @@ const functionjs = {
         larkchatid: newlarkchatid
       })
     })
-    let setolder = await axios.get('https://larkapi.soidea.co/edit-larkchat/'+thisforcompany.name+'/'+userId+'/'+newlarkchatid)
     return newlarkchatid
   },
   get_user_from_line: async function (userId, linetoken) {
