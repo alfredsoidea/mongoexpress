@@ -131,9 +131,7 @@ app.post('/lark/webhook/:forcompany', async (req, res) => {
   thisforcompany = await functionjs.getForcompany(thisparam)
   console.log(JSON.stringify(req.body))
   if (requestbody.type == "url_verification") {
-    if (requestbody.challenge) {
-      res.status(200).send({ "challenge": requestbody.challenge })
-    }
+    res.status(200).send({ "challenge": requestbody.challenge })
   } else {
     let messageraw = requestbody['event']
     let thislarkchatid = messageraw.message.chat_id
