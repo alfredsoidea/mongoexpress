@@ -24,7 +24,7 @@ const firebaseapp = initializeApp(firebaseConfig);
 //require('dotenv').config();
 
 //import api from './api/index.js';
-import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable } from "firebase/storage";
+import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable, uploadString } from "firebase/storage";
 import { 
           getDoc,
           getDocs,
@@ -39,7 +39,7 @@ import {
           getFirestore,
           collection,
           runTransaction,
-          serverTimestamp
+          serverTimestamp,
 } from "firebase/firestore";
 
 const storage = getStorage();
@@ -136,6 +136,7 @@ app.post('/lark/webhook/:forcompany', async (req, res) => {
     await res.status(200).send({ "challenge": requestbody.challenge })
   } else {
     let messageraw = requestbody['event']
+    console.log(messageraw)
     let thislarkchatid = messageraw.message.chat_id
     console.log(thislarkchatid)
     let resuser = await functionjs.get_userline_data_larkchat(thisforcompany, thislarkchatid)
@@ -150,7 +151,7 @@ app.post('/lark/webhook/:forcompany', async (req, res) => {
     });
     let thisstoken = await functionjs.getTokenlark(thisforcompany)
     let querymess = await functionjs.query_message_by_larkchat(thisstoken, thisforcompany, resuser)
-    await  res.status(200).send("ok")
+    await res.status(200).send("ok")
   }
 })
 
@@ -175,14 +176,65 @@ app.post('/line-checkdata/:forcompany', async (req, res) => {
   res.status(200).send('ok')
 })
 
-app.post('/upload_firebase', multer().single('file') , (req, res) => {
-  let file = req.file.buffer
-  console.log(req.file)
-  console.log(req.body)
+app.post('/upload_firebase', multer({limits: { fieldSize: 30 * 1024 * 1024 }}).single('file') , async (req, res) => {
+  console.log(req.filedata)
+  console.log("req.file end")
+  let file = req.body.filedata
   const metadata = {
-    contentType: req.file.mimetype
+    contentType: 'image/jpeg'
   };
-  const storageRef = ref(storage, 'images/' + functionjs.makeid(20) + "-" + req.file.originalname);
+  const storageRef = await ref(storage, 'images/' + functionjs.makeid(30) + "-image");
+
+  const uploadTask = uploadBytes(storageRef, file).then((snapshot) => {
+    //console.log(snapshot)
+  });
+  // uploadTask.on('state_changed', (snapshot) => {
+  //     console.log(snapshot)
+  //     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+  //     console.log('Upload is ' + progress + '% done');
+  //     switch (snapshot.state) {
+  //       case 'paused':
+  //         console.log('Upload is paused');
+  //         break;
+  //       case 'running':
+  //         console.log('Upload is running');
+  //         break;
+  //     }
+  //   }, 
+  //   (error) => {
+  //     switch (error.code) {
+  //       case 'storage/unauthorized':
+  //         break;
+  //       case 'storage/canceled':
+  //         break;
+  //       case 'storage/unknown':
+  //         break;
+  //     }
+  //   }, () => {
+  //     getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+  //       res.status(200).send(downloadURL)
+  //     });
+  //   }
+  // );
+})
+
+const port = process.env.PORT || 8000;
+
+app.listen(port, () => {
+  console.log(`Listening: http://localhost:${port}`);
+});
+
+app.post('/upload_firebase_data', multer({
+    limits: { fieldSize: 30 * 1024 * 1024 }
+  }).single('file') , async (req, res) => {
+  console.log("req.file")
+  console.log(req.body)
+  console.log("req.file end")
+  let file = req.file
+  const metadata = {
+    contentType: 'image/jpeg'
+  };
+  const storageRef = await ref(storage, 'images/' + functionjs.makeid(30) + "-image");
   const uploadTask = uploadBytesResumable(storageRef, file, metadata);
   uploadTask.on('state_changed', (snapshot) => {
       console.log(snapshot)
@@ -208,21 +260,11 @@ app.post('/upload_firebase', multer().single('file') , (req, res) => {
       }
     }, () => {
       getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-        console.log(downloadURL);
+        res.status(200).send(downloadURL)
       });
     }
   );
-  res.json({
-    message: 'done'
-  });
+
 });
-
-const port = process.env.PORT || 8000;
-
-app.listen(port, () => {
-  console.log(`Listening: http://localhost:${port}`);
-});
-
-
 
 export default  app;
