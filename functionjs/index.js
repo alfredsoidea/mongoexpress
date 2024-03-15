@@ -659,15 +659,15 @@ const functionjs = {
 
         //console.log(datareturn)
 
-        const storageRef1 = await ref(storage, 'videoslark/' + functionjs.makeid(30) + "-video.mp4");
-        const uploadTask1 = await uploadBytes(storageRef, filedata.data).then((snapshot) => {
+        const storageRef1 = await ref(storage, 'videoslark/' + functionjs.makeid(30) + "-" + JSON.parse(datasendtext.content).file_name);
+        const uploadTask1 = await uploadBytes(storageRef1, mediaUrlFileRes.data).then((snapshot) => {
           return getDownloadURL(snapshot.ref).then((downloadURL) => {
             return downloadURL
           });
         });
 
         const storageRef2 = await ref(storage, 'videoslark/' + functionjs.makeid(30) + "-videopreview.jpg");
-        const uploadTask2 = await uploadBytes(storageRef, filedata.data).then((snapshot) => {
+        const uploadTask2 = await uploadBytes(storageRef2, mediaUrlImageRes.data).then((snapshot) => {
           return getDownloadURL(snapshot.ref).then((downloadURL) => {
             return downloadURL
           });
