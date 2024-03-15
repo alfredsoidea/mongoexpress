@@ -53,6 +53,13 @@ const functionjs = {
     let thisuserdata = await docSnap.data()
     return thisuserdata
   },
+  get_userline_data_larkchat: async function (thisforcompany, larkchatid) {
+    const q = query(collection(dbstore, "userline_"+thisforcompany.name), where("larkchatid", "==", larkchatid));
+    const querySnapshot = await getDocs(q);
+    let userdata = ""
+    querySnapshot.forEach((doc) => { userdata = doc.data() });
+    return userdata
+  },
   create_larkchat: async function (thisforcompany, displayName, imagekey, thisstoken, userId) {
     let thisdata = []
     let getUserinitAdmin = await axios.get("https://larkapi.soidea.co/getuserinit/"+thisforcompany.name)
@@ -70,9 +77,6 @@ const functionjs = {
     console.log("thisdata")
     console.log(thisdata)
     
-      //thisdata = [ "943ab238","1c6ecgfc" ]
-
-
     console.log(JSON.stringify(thisdata))
     let response = await axios.post('https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=user_id', {
       "name": displayName,
@@ -490,6 +494,24 @@ const functionjs = {
   //     }
   //   }
   // },
+  set_larkmessage_status: async function (datamessagekey, thisforcompany, statuschange) {
+    let dataref = await collection(dbstore, "message_lark_"+thisforcompany.name)
+    let datarefdoc = await doc(dataref, datamessagekey)
+    try {
+      await runTransaction(dbstore, async (transaction) => {
+      const sfDoc = await transaction.get(datarefdoc);
+        if (!sfDoc.exists()) {
+          throw "Document does not exist!";
+        }
+
+        const newPopulation = statuschange;
+        transaction.update(datarefdoc, { status: newPopulation });
+      });
+      console.log('Transaction success!');
+    } catch (e) {
+      console.log('Transaction failure:', e);
+    }
+  },
   set_message_status: async function (datamessagekey, thisforcompany, statuschange) {
     let dataref = await collection(dbstore, "message_line_"+thisforcompany.name)
     let datarefdoc = await doc(dataref, datamessagekey)
@@ -516,6 +538,62 @@ const functionjs = {
       return 1;
     }
     return 0;
+  },
+  query_message_by_larkchat: async function (thisstoken, thisforcompany , resuser) {
+    let dataref = collection(dbstore, "message_lark_"+thisforcompany.name)
+    let userId = resuser.user_id
+    const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userId) );
+    const querySnapshot = await getDocs(q);
+    let newdatajson = []
+    await querySnapshot.forEach(async (doc) => {
+      let bodydata = doc.data()
+      bodydata.id = doc.id
+      newdatajson.push(bodydata)
+    });
+    await newdatajson.forEach(async (element) => {
+      await functionjs.send_message_to_lark(thisstoken, thisforcompany, userId, element)
+    });
+  },
+  send_message_to_lark: async function (thisstoken, thisforcompany, userId, datamessage) {
+    let linetoken = thisforcompany.linetoken
+    let userdataref = doc(dbstore, "userline_"+thisforcompany.name, userId);
+    let userdataget = await getDoc(userdataref);
+    let userdata = await userdataget.data()
+    let datasendtext, datareturn
+    let datamessagekey = datamessage.id
+
+    await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'process')
+    let thismessagetype = datamessage.message_data.message_type
+    switch(thismessagetype) {
+      case 'text':
+        datasendtext = JSON.parse(datamessage.message_data.content).text
+        datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
+          "to": userId,
+          "messages": [
+            {
+              "type": thismessagetype,
+              "text": datasendtext
+            }
+          ]
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+linetoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        break;
+      case 'file':
+        datasendtext = JSON.parse(datamessage.message_data.content)
+        datareturn = await axios.get('https://open.larksuite.com/open-apis/im/v1/messages/'+datasendtext.message_id+'/resources/'+datasendtext.file_key+'?type=file', {
+        }, {
+          headers: { 'Authorization': 'Bearer '+thisstoken }
+        })
+        console.log(datareturn)
+        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        break;
+    }
   },
   query_message_by_user: async function (thisstoken, thisforcompany, userId) {
     let dataref = collection(dbstore, "message_line_"+thisforcompany.name)
