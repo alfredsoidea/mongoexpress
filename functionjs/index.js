@@ -551,10 +551,10 @@ const functionjs = {
       newdatajson.push(bodydata)
     });
     await newdatajson.forEach(async (element) => {
-      await functionjs.send_message_to_lark(thisstoken, thisforcompany, userId, element)
+      await functionjs.send_message_from_lark(thisstoken, thisforcompany, userId, element)
     });
   },
-  send_message_to_lark: async function (thisstoken, thisforcompany, userId, datamessage) {
+  send_message_from_lark: async function (thisstoken, thisforcompany, userId, datamessage) {
     let linetoken = thisforcompany.linetoken
     let userdataref = doc(dbstore, "userline_"+thisforcompany.name, userId);
     let userdataget = await getDoc(userdataref);
@@ -653,7 +653,7 @@ const functionjs = {
           },
           responseType: 'arraybuffer',
           method: "GET",
-          url: mediaUrlImage
+          url: mediaUrlFile
         })
 
 
@@ -680,6 +680,60 @@ const functionjs = {
               "type": "video",
               "originalContentUrl": uploadTask1,
               "previewImageUrl": uploadTask2
+            }
+          ]
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+linetoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        break;
+      case 'file':
+        datasendtext = datamessage.message_data
+        let mediaUrlFile2 = 'https://open.larksuite.com/open-apis/im/v1/messages/'+datasendtext.message_id+'/resources/'+JSON.parse(datasendtext.content).file_key+'?type=file';
+        let mediaUrlFile2Res = await axios.request({
+          headers: {
+            Authorization: `Bearer ${thisstoken}`,
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+          responseType: 'arraybuffer',
+          method: "GET",
+          url: mediaUrlFile2
+        })
+        const storageRefforFile = await ref(storage, 'filelark/' + functionjs.makeid(30) + "-" + JSON.parse(datasendtext.content).file_name);
+        const uploadTaskforFile = await uploadBytes(storageRefforFile, mediaUrlFile2Res.data).then((snapshot) => {
+          return getDownloadURL(snapshot.ref).then((downloadURL) => {
+            return downloadURL
+          });
+        });
+
+        await axios.post('https://api.line.me/v2/bot/message/push', {
+          "to": userId,
+          "messages": [
+            {
+              "type": "flex",
+              "altText": "You have received a PDF file.",
+              "contents": {
+                "type": "bubble",
+                "body": {
+                  "type": "box",
+                  "layout": "horizontal",
+                  "contents": [
+                    {
+                      "type": "button",
+                      "style": "primary",
+                      "action": {
+                        "type": "uri",
+                        "label": "VIEW PDF FILE",
+                        "uri": uploadTaskforFile,
+                      }
+                    }
+                  ]
+                }
+              }
             }
           ]
         }, {
