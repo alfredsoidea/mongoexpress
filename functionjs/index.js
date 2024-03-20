@@ -129,7 +129,6 @@ const functionjs = {
       });
     });
 
-
     let avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl , thisstoken)
     let avatarKey = avatarData.data.data.image_key
     let newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken, userId)
