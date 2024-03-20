@@ -66,7 +66,6 @@ const functionjs = {
     console.log("getUserinitAdmin")
     await getUserinitAdmin.data.forEach((element) => {
       if (userId == 'U19676ac8b7cbd97b66e4c6b3d917f049') {
-        //console.log(element)
         if (element.email == 'alfred@soidea.co' || element.email == 'chate@soidea.co') {
           thisdata.push(element.userlark_id)  
         }
@@ -130,11 +129,17 @@ const functionjs = {
       });
     });
 
-    let avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl , thisstoken)
-    let avatarKey = avatarData.data.data.image_key
+    let avatarData, avatarKey
+
+    if (userfromline.pictureUrl) {
+      avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl , thisstoken)
+      avatarKey = avatarData.data.data.image_key
+    } else {
+      avatarKey = ""
+    }
     let newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken, userId)
     let newUserdata = await runTransaction(dbstore, async (transaction) => {
-      transaction.update(userDocRef, { 
+      await transaction.update(userDocRef, { 
         larkchatid: newlarkchatid
       })
     })
