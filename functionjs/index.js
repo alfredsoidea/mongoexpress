@@ -465,6 +465,35 @@ const functionjs = {
         }
         await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
         break;
+      case 'post':
+        datasendtext = JSON.parse(datamessage.message_data.content)
+        let postnewtext = ""
+        postnewtext = postnewtext + datasendtext.title + "\n"
+        datasendtext.content.forEach((element) => {
+          element.forEach((elementinner) => {
+            postnewtext = postnewtext + elementinner.text + "\n"
+          })
+        });
+        console.log(postnewtext)
+        if (postnewtext.includes('@_')) {} else {
+          datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
+            "to": userId,
+            "messages": [
+              {
+                "type": "text",
+                "text": postnewtext
+              }
+            ]
+          }, {
+            headers: {
+              'Authorization': 'Bearer '+linetoken,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          })
+        }
+        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        break;
       case 'image':
         datasendtext = datamessage.message_data
         datareturn = await axios.request({
