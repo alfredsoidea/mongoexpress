@@ -66,7 +66,6 @@ const functionjs = {
     console.log("getUserinitAdmin")
     await getUserinitAdmin.data.forEach((element) => {
       if (userId == 'U19676ac8b7cbd97b66e4c6b3d917f049') {
-        //console.log(element)
         if (element.email == 'alfred@soidea.co' || element.email == 'chate@soidea.co') {
           thisdata.push(element.userlark_id)  
         }
@@ -121,23 +120,47 @@ const functionjs = {
     let lark_app_secret = thisforcompany.lark_app_secret
     let linetoken = thisforcompany.linetoken
     let userfromline = await functionjs.get_user_from_line(userId, linetoken)
-    let userDisplayname = userfromline.displayName
+    let userDisplayname, userDisplayImage, avatarData, avatarKey, newlarkchatid, newUserdata
+    console.log(userfromline)
+
+    if (userfromline.displayName) {
+      userDisplayname = await userfromline.displayName
+    } else {
+      userDisplayname = ""
+    }
+
+    if (userfromline.pictureUrl) {
+      userDisplayImage = await userfromline.pictureUrl
+    } else {
+      userDisplayImage = "none"
+    }
+
     const userDocRef = doc(dbstore, "userline_"+thisforcompany.name, userId);
     await runTransaction(dbstore, async (transaction) => {
       transaction.update(userDocRef, { 
         displayname: userDisplayname,
-        pictureurl: userfromline.pictureUrl
+        pictureurl: userDisplayImage
       });
     });
 
-    let avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl , thisstoken)
-    let avatarKey = avatarData.data.data.image_key
-    let newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken, userId)
-    let newUserdata = await runTransaction(dbstore, async (transaction) => {
-      transaction.update(userDocRef, { 
-        larkchatid: newlarkchatid
+    if (userDisplayImage == "none") {
+      newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , "none", thisstoken, userId)
+      newUserdata = await runTransaction(dbstore, async (transaction) => {
+        await transaction.update(userDocRef, { 
+          larkchatid: newlarkchatid
+        })
       })
-    })
+    } else {
+      avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl , thisstoken)
+      avatarKey = avatarData.data.data.image_key
+      newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken, userId)
+      newUserdata = await runTransaction(dbstore, async (transaction) => {
+        await transaction.update(userDocRef, { 
+          larkchatid: newlarkchatid
+        })
+      })
+    }
+    
     return newlarkchatid
   },
   get_user_from_line: async function (userId, linetoken) {
@@ -350,150 +373,6 @@ const functionjs = {
     }
   
   },
-  // send_message_by_webhook: async function (thisstoken, thisforcompany, datamessage) {
-  //   console.log(thisforcompany.name)
-  //   let linetoken = thisforcompany.linetoken
-  //   let thismessagetype = datamessage.message_data.type
-  //   let datamessagekey = datamessage.id
-  //   let contentdata = datamessage.message_data
-  //   let datareturn = ""
-  //   let userdata = await axios({
-  //       url: 'https://larkapi.soidea.co/checkuserline-old/'+thisforcompany.name+'/'+datamessage.user_id,
-  //       method: 'get',
-  //       timeout: 15000,
-  //       headers: {'Content-Type': 'application/json',}
-  //   })
-  //   console.log(contentdata)
-  //   if (datamessage.status == 'wait') {
-  //     switch(thismessagetype) {
-  //       case 'text':
-  //         let datasendtext = contentdata.message.text
-  //         datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-  //           "receive_id": userdata.larkchatid,
-  //           "msg_type": "text",
-  //           "content": JSON.stringify({ "text": datasendtext })
-  //         }, {
-  //           headers: {
-  //             'Authorization': 'Bearer '+thisstoken,
-  //             'Content-Type': 'application/json',
-  //             'Accept': 'application/json'
-  //           }
-  //         })
-  //         functionjs.set_message_status(datamessagekey, forcompany, 'sent')
-  //         break;
-  //       case 'sticker':
-  //         datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-  //           "receive_id": userdata.larkchatid,
-  //           "msg_type": "text",
-  //           "content": JSON.stringify({ "text": "[ sticker ]" })
-  //         }, {
-  //           headers: {
-  //             'Authorization': 'Bearer '+thisstoken,
-  //             'Content-Type': 'application/json',
-  //             'Accept': 'application/json'
-  //           }
-  //         })
-  //         functionjs.set_message_status(datamessagekey, forcompany, 'sent')
-  //         break;
-  //       case 'video':
-  //         console.log('video')
-  //         let dataresultvideo = await axios({ 
-  //           method: 'get', 
-  //           responseType: 'arraybuffer',
-  //           url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
-  //           headers: { 
-  //             'Authorization': 'Bearer '+linetoken
-  //           }
-  //         })
-
-  //         let fileData = dataresultvideo.data
-
-  //         let dataresultsentvideo = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
-  //           "file_type": "mp4",
-  //           "file_name": "video_"+functionjs.makeid(20)+".mp4",
-  //           "duration": contentdata.message.duration,
-  //           "file": fileData
-  //         }, {
-  //           headers: {
-  //             'Authorization': 'Bearer '+thisstoken,
-  //             'Content-Type': 'multipart/form-data' 
-  //           }
-  //         })
-
-  //         let dataresultvideo_preview = await axios({ 
-  //           method: 'get', 
-  //           responseType: 'arraybuffer',
-  //           url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content/preview',
-  //           headers: {  'Authorization': 'Bearer '+linetoken }
-  //         })
-
-  //         console.log("dataresultvideo_preview")
-
-  //         let videoPrev = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
-  //           "image_type": "message",
-  //           "image": dataresultvideo_preview.data
-  //         }, {
-  //           headers: {
-  //             'Authorization': 'Bearer '+thisstoken,
-  //             'Content-Type': 'multipart/form-data' 
-  //           }
-  //         })
-
-  //         //sending video message
-  //         datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-  //           "receive_id": userdata.larkchatid,
-  //           "msg_type": "media",
-  //           "content": JSON.stringify({
-  //             "image_key": videoPrev.data.data.image_key,
-  //             "file_key": dataresultsentvideo.data.data.file_key,
-  //           })
-  //         }, {
-  //           headers: {
-  //             'Authorization': 'Bearer '+thisstoken,
-  //             'Content-Type': 'application/json',
-  //             'Accept': 'application/json'
-  //           }
-  //         })
-
-  //         functionjs.set_message_status(datamessagekey, forcompany, 'sent')
-  //         break;
-  //       case 'image':
-  //         var dataresult = await axios({ 
-  //           method: 'get', 
-  //           responseType: 'arraybuffer',
-  //           url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
-  //           headers: { 
-  //             'Authorization': 'Bearer '+linetoken
-  //           }
-  //         })
-  //         var dataresultsent = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
-  //           "image_type": "message",
-  //           "image": dataresult.data
-  //         }, {
-  //           headers: {
-  //             'Authorization': 'Bearer '+thisstoken,
-  //             'Content-Type': 'multipart/form-data' 
-  //           }
-  //         })
-  //         datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-  //           "receive_id": userdata.larkchatid,
-  //           "msg_type": "image",
-  //           "content": JSON.stringify({
-  //             "image_key": dataresultsent.data.data.image_key
-  //           })
-  //         }, {
-  //           headers: {
-  //             'Authorization': 'Bearer '+thisstoken,
-  //             'Content-Type': 'application/json',
-  //             'Accept': 'application/json'
-  //           }
-  //         })
-  //         functionjs.set_message_status(datamessagekey, forcompany, 'sent')
-  //         break;
-  //       default:
-  //     }
-  //   }
-  // },
   set_larkmessage_status: async function (datamessagekey, thisforcompany, statuschange) {
     let dataref = await collection(dbstore, "message_lark_"+thisforcompany.name)
     let datarefdoc = await doc(dataref, datamessagekey)
@@ -704,8 +583,9 @@ const functionjs = {
           url: mediaUrlFile2
         })
         const storageRefforFile = await ref(storage, 'filelark/' + functionjs.makeid(30) + "-" + JSON.parse(datasendtext.content).file_name);
-        const uploadTaskforFile = await uploadBytes(storageRefforFile, mediaUrlFile2Res.data).then((snapshot) => {
-          return getDownloadURL(snapshot.ref).then((downloadURL) => {
+        const uploadTaskforFile = await uploadBytes(storageRefforFile, mediaUrlFile2Res.data).then(async (snapshot) => {
+          return await getDownloadURL(snapshot.ref).then((downloadURL) => {
+            console.log(downloadURL)
             return downloadURL
           });
         });

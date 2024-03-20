@@ -56,6 +56,10 @@ app.get('/', (req, res) => {
   res.json({message: 'test'});
 });
 
+app.get('/createroom/:userid', (req, res) => {
+  Ubf98f1a03f1e049a17940ebc8e2dee1f
+});
+
 app.post('/line/webhook/:forcompany', async (req, res) => {
   let resuser,thisforcompany,thisstokenres
   let thisparam = req.params.forcompany
