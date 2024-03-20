@@ -120,23 +120,47 @@ const functionjs = {
     let lark_app_secret = thisforcompany.lark_app_secret
     let linetoken = thisforcompany.linetoken
     let userfromline = await functionjs.get_user_from_line(userId, linetoken)
-    let userDisplayname = userfromline.displayName
+    let userDisplayname, userDisplayImage, avatarData, avatarKey, newlarkchatid, newUserdata
+    console.log(userfromline)
+
+    if (userfromline.displayName) {
+      userDisplayname = await userfromline.displayName
+    } else {
+      userDisplayname = ""
+    }
+
+    if (userfromline.pictureUrl) {
+      userDisplayImage = await userfromline.pictureUrl
+    } else {
+      userDisplayImage = "none"
+    }
+
     const userDocRef = doc(dbstore, "userline_"+thisforcompany.name, userId);
     await runTransaction(dbstore, async (transaction) => {
       transaction.update(userDocRef, { 
         displayname: userDisplayname,
-        pictureurl: userfromline.pictureUrl
+        pictureurl: userDisplayImage
       });
     });
 
-    let avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl , thisstoken)
-    let avatarKey = avatarData.data.data.image_key
-    let newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken, userId)
-    let newUserdata = await runTransaction(dbstore, async (transaction) => {
-      transaction.update(userDocRef, { 
-        larkchatid: newlarkchatid
+    if (userDisplayImage == "none") {
+      newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , "none", thisstoken, userId)
+      newUserdata = await runTransaction(dbstore, async (transaction) => {
+        await transaction.update(userDocRef, { 
+          larkchatid: newlarkchatid
+        })
       })
-    })
+    } else {
+      avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl , thisstoken)
+      avatarKey = avatarData.data.data.image_key
+      newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken, userId)
+      newUserdata = await runTransaction(dbstore, async (transaction) => {
+        await transaction.update(userDocRef, { 
+          larkchatid: newlarkchatid
+        })
+      })
+    }
+    
     return newlarkchatid
   },
   get_user_from_line: async function (userId, linetoken) {
