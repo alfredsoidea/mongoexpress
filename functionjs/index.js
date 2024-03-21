@@ -137,7 +137,7 @@ const functionjs = {
 
     const userDocRef = doc(dbstore, "userline_"+thisforcompany.name, userId);
     await runTransaction(dbstore, async (transaction) => {
-      transaction.update(userDocRef, { 
+      await transaction.update(userDocRef, { 
         displayname: userDisplayname,
         pictureurl: userDisplayImage
       });
