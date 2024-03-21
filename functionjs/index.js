@@ -152,7 +152,7 @@ const functionjs = {
       })
     } else {
       avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl , thisstoken)
-      avatarKey = avatarData.data.data.image_key
+      avatarKey = await avatarData.data.data.image_key
       newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken, userId)
       newUserdata = await runTransaction(dbstore, async (transaction) => {
         await transaction.update(userDocRef, { 
