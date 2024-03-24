@@ -234,12 +234,8 @@ app.get('/testmail/:otp/:mail', (req, res) => {
         }
       ],
       "subject": "Please Verify OTP",
-      "text": "กรุณาใช้รหัสด้านล่างเพื่อยืนยันที่อยู่อีเมลของคุณ.รหัสนี้จะหมดอายุใน 10 นาทีและสามารถใช้ได้เพียงครั้งเดียวเท่านั้น \n\n"
-      +otp+ "หากคุณไม่ได้ร้องขอรหัสนี้ กรุณาละเว้นอีเมลนี ทีม Daikin Thailand \n\n"
-      + "\n\nPlease use below verification code below to\n\n"
-      + "verify your e-mail address \n\nThe code will expire in 10 minutes and can be used only once.\n"
-      + otp + "If you did not request a code, please ignore this e-mail.\n"
-       +"Daikin Thailand"
+      "text": "Please use below verification code below to verify your e-mail address.\n\nThe code will expire in 10 minutes and can be used only once."
+          + otp +"\n\nIf you did not request a code, please ignore this e-mail. \n Daikin Thailand"
     }, {
     headers: { 'Authorization': 'Bearer mlsn.dccff977acb4818ba080d0518e60bfa89bfb45ed570e6977d93f4883ffceecd9' }
   })
