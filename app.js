@@ -234,7 +234,7 @@ app.get('/testmail/:otp/:mail', (req, res) => {
         }
       ],
       "subject": "Please Verify OTP",
-      "text": "Please use below verification code below to verify your e-mail address.\n\nThe code will expire in 10 minutes and can be used only once."
+      "text": "Please use below verification code below to verify your e-mail address.\n\nThe code will expire in 10 minutes and can be used only once.\n\n"
           + otp +"\n\nIf you did not request a code, please ignore this e-mail. \n Daikin Thailand"
     }, {
     headers: { 'Authorization': 'Bearer mlsn.dccff977acb4818ba080d0518e60bfa89bfb45ed570e6977d93f4883ffceecd9' }
