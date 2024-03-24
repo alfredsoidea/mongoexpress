@@ -221,7 +221,7 @@ app.post('/line-checkdata/:forcompany', async (req, res) => {
 })
 
 app.get('/testmail/:otp/:mail', (req, res) => {
-  let thisstokenres  = await axios.post('https://api.mailersend.com/v1/email', {
+  let thisstokenres = axios.post('https://api.mailersend.com/v1/email', {
       "from": {
         "email": "MS_Ojk4Pr@trial-x2p0347yzd34zdrn.mlsender.net",
         "name": "MailerSend"
