@@ -243,6 +243,7 @@ app.get('/testmail/:otp/:mail', (req, res) => {
     }, {
     headers: { 'Authorization': 'Bearer mlsn.dccff977acb4818ba080d0518e60bfa89bfb45ed570e6977d93f4883ffceecd9' }
   })
+  res.status(200).send('ok')
 });
 
 app.post('/upload_firebase', multer({limits: { fieldSize: 30 * 1024 * 1024 }}).single('file') , async (req, res) => {
