@@ -60,6 +60,26 @@ app.get('/createroom/:userid', (req, res) => {
   
 });
 
+app.get('/mockuproom/:forcompany/:roomid', async (req, res) => {
+  let thisroomid = req.params.roomid
+  let thisparam = req.params.forcompany
+  let thisforcompany = await functionjs.getForcompany(thisparam)
+  let thisstokenres = await functionjs.getTokenlark(thisforcompany)
+  let thisstoken = thisstokenres
+  let data2return = await axios.request({
+    headers: {
+      Authorization: 'Bearer '+thisstoken,
+      'Content-Type': 'application/json',
+    },
+    method: "DELETE",
+    data: {
+      "id_list": [ "d9cdg11a","6dae7g89","7fbdbba2","22d2d869","64b6ffa4","bf6a1c16","19ed8f51","8317b15e","faa997a2","9gdc9a6c","54eg842f","b5459dc6","db2dgba3","gb5f4833","b4gfa3d5","c8252377","f5b74daa","6dbg4e65","fd8gef52","85612fc1","46398ccb","e7g76dg8" ]
+    },
+    url: "https://open.larksuite.com/open-apis/im/v1/chats/oc_87a7d2fccc0042f6807cdb1927f3f1d5/members?member_id_type=user_id"
+  })
+  await res.status(200).send(thisstoken)
+});
+
 app.post('/line/webhook/:forcompany', async (req, res) => {
   let resuser,thisforcompany,thisstokenres
   let thisparam = req.params.forcompany
@@ -199,6 +219,25 @@ app.post('/line-checkdata/:forcompany', async (req, res) => {
   });
   res.status(200).send('ok')
 })
+
+app.get('/testmail/:otp/:mail', (req, res) => {
+  let thisstokenres  = await axios.post('https://api.mailersend.com/v1/email', {
+      "from": {
+        "email": "MS_Ojk4Pr@trial-x2p0347yzd34zdrn.mlsender.net",
+        "name": "MailerSend"
+      },
+      "to": [
+        {
+          "email": "udompol.bkk@gmail.com",
+          "name": "John Mailer"
+        }
+      ],
+      "subject": "Hello from ",
+      "text": "This is just a friendly hello from your friends ."
+    }, {
+    headers: { 'Authorization': 'Bearer mlsn.dccff977acb4818ba080d0518e60bfa89bfb45ed570e6977d93f4883ffceecd9' }
+  })
+});
 
 app.post('/upload_firebase', multer({limits: { fieldSize: 30 * 1024 * 1024 }}).single('file') , async (req, res) => {
   console.log(req.filedata)
