@@ -191,9 +191,7 @@ app.post('/lark/groupchat/:forcompany', async (req, res) => {
     },
     method: "DELETE",
     url: 'https://open.larksuite.com/open-apis/im/v1/chats/oc_19b17405416d63205b29dd35337495e0/members?member_id_type=user_id',
-    data: {
-      "id_list": [ "4g599gf6" ]
-    }
+    data: {"id_list": [ "4g599gf6" ]}
   })
   await res.status(200).send("ok")
 })
