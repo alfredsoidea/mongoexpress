@@ -65,7 +65,7 @@ app.get('/mockuproom/:forcompany/:roomid', async (req, res) => {
   let thisparam = req.params.forcompany
   let thisforcompany = await functionjs.getForcompany(thisparam)
   let thisstokenres = await functionjs.getTokenlark(thisforcompany)
-  let thisstoken = thisstokenres
+  let thisstoken = await thisstokenres
   let data2return = await axios.request({
     headers: {
       Authorization: 'Bearer '+thisstoken,
@@ -75,7 +75,7 @@ app.get('/mockuproom/:forcompany/:roomid', async (req, res) => {
     data: {
       "id_list": [ "d9cdg11a","6dae7g89","7fbdbba2","22d2d869","64b6ffa4","bf6a1c16","19ed8f51","8317b15e","faa997a2","9gdc9a6c","54eg842f","b5459dc6","db2dgba3","gb5f4833","b4gfa3d5","c8252377","f5b74daa","6dbg4e65","fd8gef52","85612fc1","46398ccb","e7g76dg8" ]
     },
-    url: "https://open.larksuite.com/open-apis/im/v1/chats/oc_87a7d2fccc0042f6807cdb1927f3f1d5/members?member_id_type=user_id"
+    url: "https://open.larksuite.com/open-apis/im/v1/chats/Uc1a47ac6586cfc27290c1a6394498207/members?member_id_type=user_id"
   })
   await res.status(200).send(thisstoken)
 });
@@ -234,8 +234,7 @@ app.get('/testmail/:otp/:mail', (req, res) => {
         }
       ],
       "subject": "Please Verify OTP",
-      "text": "Please use below verification code below to verify your e-mail address.\n\nThe code will expire in 10 minutes and can be used only once.\n\n"
-          + otp +"\n\nIf you did not request a code, please ignore this e-mail. \n Daikin Thailand"
+      "text": "<div style='padding-top: 20px; padding-bottom: 20px;'><div style='text-align: center;'><img style='display: inline-block' src='https://firebasestorage.googleapis.com/v0/b/daikin-8f1c5.appspot.com/o/daikinlogo.png?alt=media&token=7a16ddb0-6774-4400-be37-87ff795850d5' height='50'></div><div style='margin-top: 20px; text-align: center; font-size: 24px'>Your OTP</div><div style='margin-top: 20px; text-align: center; font-size: 18px'>Please use below verification code below to verify your e-mail address. <br>The code will expire in 10 minutes and can be used only once.</div><div style='text-align: center; margin-top: 20px;'><div style='display: inline-block; line-height: 50px; letter-spacing: 10px; background: #0099E6; height: 50px; padding-left: 20px; padding-right: 10px; color: #fff; font-size: 24px; color: #fff'>"+ otp +"</div><div style='margin-top: 20px;'>If you did not request a code, please ignore this e-mail.Daikin Thailand</div></div></div>"
     }, {
     headers: { 'Authorization': 'Bearer mlsn.dccff977acb4818ba080d0518e60bfa89bfb45ed570e6977d93f4883ffceecd9' }
   })
