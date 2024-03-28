@@ -56,9 +56,6 @@ app.get('/', (req, res) => {
   res.json({message: 'test'});
 });
 
-app.get('/createroom/:userid', (req, res) => {
-  
-});
 
 app.get('/mockuproom/:forcompany/:roomid', async (req, res) => {
   let thisroomid = req.params.roomid
