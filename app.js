@@ -72,7 +72,7 @@ app.get('/mockuproom/:forcompany/:roomid', async (req, res) => {
     data: {
       "id_list": [ "d9cdg11a","6dae7g89","7fbdbba2","22d2d869","64b6ffa4","bf6a1c16","19ed8f51","8317b15e","faa997a2","9gdc9a6c","54eg842f","b5459dc6","db2dgba3","gb5f4833","b4gfa3d5","c8252377","f5b74daa","6dbg4e65","fd8gef52","85612fc1","46398ccb","e7g76dg8" ]
     },
-    url: "https://open.larksuite.com/open-apis/im/v1/chats/Uc1a47ac6586cfc27290c1a6394498207/members?member_id_type=user_id"
+    url: "https://open.larksuite.com/open-apis/im/v1/chats/oc_c356a428a47424c9a3a4de63cbba4697/members?member_id_type=user_id"
   })
   await res.status(200).send(thisstoken)
 });
@@ -204,7 +204,6 @@ app.post('/line-checkdata/:forcompany', async (req, res) => {
     headers: { 'Content-type': 'application/json; charset=utf-8' }
   })
   let thisstoken = thisstokenres.data.tenant_access_token
-  console.log(await thisstoken)
   let dataref = await collection(dbstore, "message_line_"+thisparam)
   const q = query(dataref, where("status", "==", "wait"));
   const querySnapshot = await getDocs(q);
