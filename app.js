@@ -77,6 +77,10 @@ app.get('/mockuproom/:forcompany/:roomid', async (req, res) => {
   await res.status(200).send(thisstoken)
 });
 
+app.post('/lark-sendpdf', async (req, res) => {
+  
+})
+
 app.post('/line/webhook/:forcompany', async (req, res) => {
   let resuser,thisforcompany,thisstokenres
   let thisparam = req.params.forcompany
