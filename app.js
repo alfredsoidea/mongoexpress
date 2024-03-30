@@ -80,6 +80,7 @@ app.get('/mockuproom/:forcompany/:roomid', async (req, res) => {
 app.post('/lark-sendpdf', async (req, res) => {
   let requestbody = req.body
   console.log(JSON.stringify(req.body))
+  console.log(requestbody.linetoken)
   console.log("JSON.stringify(req.body)final")
   await axios.post('https://api.line.me/v2/bot/message/push', {
     "to": requestbody.userId,
@@ -114,7 +115,7 @@ app.post('/lark-sendpdf', async (req, res) => {
       'Accept': 'application/json'
     }
   })
-  await functionjs.set_message_status(requestbody.datamessagekey, { 'name':requestbody.forcompany }, 'sent')
+  await functionjs.set_message_status(requestbody.datamessagekey, { 'name': requestbody.forcompany }, 'sent')
   await res.status(200).send('ok')
 })
 
