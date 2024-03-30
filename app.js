@@ -157,9 +157,7 @@ app.post('/lark/webhook/:forcompany', async (req, res) => {
     await res.status(200).send({ "challenge": requestbody.challenge })
   } else {
     let messageraw = requestbody['event']
-    console.log(messageraw)
     let thislarkchatid = messageraw.message.chat_id
-    console.log(thislarkchatid)
     let resuser = await functionjs.get_userline_data_larkchat(thisforcompany, thislarkchatid)
     await addDoc(collection(dbstore, "message_lark_"+thisparam), {
       init_timestamp: requestbody['event'].message.create_time,
@@ -187,8 +185,8 @@ app.post('/lark/groupchat/:forcompany', async (req, res) => {
       'Content-Type': "application/json; charset=utf-8",
     },
     method: "DELETE",
-    url: 'https://open.larksuite.com/open-apis/im/v1/chats/oc_19b17405416d63205b29dd35337495e0/members?member_id_type=user_id',
-    data: {"id_list": [ "4g599gf6" ]}
+    url: 'https://open.larksuite.com/open-apis/im/v1/chats/oc_c356a428a47424c9a3a4de63cbba4697/members?member_id_type=user_id',
+    data: {"id_list": ["d9cdg11a","6dae7g89","7fbdbba2","22d2d869","64b6ffa4","bf6a1c16","19ed8f51","8317b15e","faa997a2","9gdc9a6c","54eg842f","b5459dc6","db2dgba3","gb5f4833","b4gfa3d5","c8252377","f5b74daa","6dbg4e65","fd8gef52","85612fc1","46398ccb","e7g76dg8"]}
   })
   await res.status(200).send("ok")
 })
