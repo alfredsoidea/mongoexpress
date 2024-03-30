@@ -80,6 +80,7 @@ app.get('/mockuproom/:forcompany/:roomid', async (req, res) => {
 app.post('/lark-sendpdf', async (req, res) => {
   let requestbody = req.body
   console.log(JSON.stringify(req.body))
+  console.log("JSON.stringify(req.body)final")
   await axios.post('https://api.line.me/v2/bot/message/push', {
     "to": requestbody.userId,
     "messages": [
