@@ -637,7 +637,7 @@ const functionjs = {
                       "action": {
                         "type": "uri",
                         "label": "VIEW PDF FILE",
-                        "uri": uploadTaskforFile+'?openExternalBrowser=1',
+                        "uri": uploadTaskforFile,
                       }
                     }
                   ]
