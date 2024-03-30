@@ -115,6 +115,7 @@ app.post('/lark-sendpdf', async (req, res) => {
     }
   })
   await functionjs.set_message_status(requestbody.datamessagekey, { 'name':requestbody.forcompany }, 'sent')
+  await res.status(200).send('ok')
 })
 
 app.post('/line/webhook/:forcompany', async (req, res) => {
