@@ -614,13 +614,10 @@ const functionjs = {
         const storageRefforFile = await ref(storage, 'filelark/' + functionjs.makeid(30) + "-" + JSON.parse(datasendtext.content).file_name);
         const uploadTaskforFile = await uploadBytes(storageRefforFile, mediaUrlFile2Res.data).then(async (snapshot) => {
           return await getDownloadURL(snapshot.ref).then((downloadURL) => {
-            var img = document.createElement('img');
-            img.src = downloadURL;
-            document.body.appendChild(img);
+            console.log(downloadURL)
             return downloadURL
           });
         });
-        const xhr = new XMLHttpRequest();
 
         await axios.post('https://api.line.me/v2/bot/message/push', {
           "to": userId,
