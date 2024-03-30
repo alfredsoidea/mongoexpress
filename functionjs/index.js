@@ -611,7 +611,7 @@ const functionjs = {
           method: "GET",
           url: mediaUrlFile2
         })
-        const storageRefforFile = await ref(storage, 'filelark/' + functionjs.makeid(30) + "-" + JSON.parse(datasendtext.content).file_name);
+        //const storageRefforFile = await ref(storage, 'filelark/' + functionjs.makeid(30) + "-" + JSON.parse(datasendtext.content).file_name);
         // const uploadTaskforFile = await uploadBytes(storageRefforFile, mediaUrlFile2Res.data).then(async (snapshot) => {
         //   return await getDownloadURL(snapshot.ref).then((downloadURL) => {
         //     console.log(downloadURL)
