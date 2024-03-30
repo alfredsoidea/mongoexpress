@@ -78,7 +78,41 @@ app.get('/mockuproom/:forcompany/:roomid', async (req, res) => {
 });
 
 app.post('/lark-sendpdf', async (req, res) => {
-  
+  let requestbody = req.body
+  await axios.post('https://api.line.me/v2/bot/message/push', {
+    "to": requestbody.userId,
+    "messages": [
+      {
+        "type": "flex",
+        "altText": "You have received a PDF file.",
+        "contents": {
+          "type": "bubble",
+          "body": {
+            "type": "box",
+            "layout": "horizontal",
+            "contents": [
+              {
+                "type": "button",
+                "style": "primary",
+                "action": {
+                  "type": "uri",
+                  "label": "VIEW PDF FILE",
+                  "uri": requestbody.imageurl,
+                }
+              }
+            ]
+          }
+        }
+      }
+    ]
+  }, {
+    headers: {
+      'Authorization': 'Bearer '+requestbody.linetoken,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    }
+  })
+  await functionjs.set_message_status(requestbody.datamessagekey, { 'name':requestbody.forcompany }, 'sent')
 })
 
 app.post('/line/webhook/:forcompany', async (req, res) => {

@@ -612,47 +612,19 @@ const functionjs = {
           url: mediaUrlFile2
         })
         const storageRefforFile = await ref(storage, 'filelark/' + functionjs.makeid(30) + "-" + JSON.parse(datasendtext.content).file_name);
-        const uploadTaskforFile = await uploadBytes(storageRefforFile, mediaUrlFile2Res.data).then(async (snapshot) => {
-          return await getDownloadURL(snapshot.ref).then((downloadURL) => {
-            console.log(downloadURL)
-            return downloadURL
-          });
-        });
+        // const uploadTaskforFile = await uploadBytes(storageRefforFile, mediaUrlFile2Res.data).then(async (snapshot) => {
+        //   return await getDownloadURL(snapshot.ref).then((downloadURL) => {
+        //     console.log(downloadURL)
+        //     return downloadURL
+        //   });
+        // });
 
-        await axios.post('https://api.line.me/v2/bot/message/push', {
-          "to": userId,
-          "messages": [
-            {
-              "type": "flex",
-              "altText": "You have received a PDF file.",
-              "contents": {
-                "type": "bubble",
-                "body": {
-                  "type": "box",
-                  "layout": "horizontal",
-                  "contents": [
-                    {
-                      "type": "button",
-                      "style": "primary",
-                      "action": {
-                        "type": "uri",
-                        "label": "VIEW PDF FILE",
-                        "uri": uploadTaskforFile,
-                      }
-                    }
-                  ]
-                }
-              }
-            }
-          ]
+        await axios.post('https://larkapi.soidea.co/uploadmaxfile/'+datasendtext.message_id+'/'+JSON.parse(datasendtext.content).file_key+'/'+thisstoken+'/'+userId+'/'+datamessagekey+'/'+thisforcompany.name, {
+          "linetoken": linetoken,
         }, {
-          headers: {
-            'Authorization': 'Bearer '+linetoken,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
+          headers: {}
         })
-        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        //await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
         break;
     }
   },
