@@ -255,26 +255,6 @@ app.post('/line-checkdata/:forcompany', async (req, res) => {
   res.status(200).send('ok')
 })
 
-// app.get('/testmail/:otp/:mail', (req, res) => {
-//   let otp = req.params.otp
-//   let mail = req.params.mail
-//   let thisstokenres = axios.post('https://api.mailersend.com/v1/email', {
-//       "from": {
-//         "email": "daikin100yearMS_eZVj0K@trial-3z0vkloj76xg7qrx.mlsender.net",
-//         "name": "Campaign"
-//       },
-//       "to": [
-//         {
-//           "email": mail
-//         }
-//       ],
-//       "subject": "Please Verify OTP for email",
-//       "html": "<div style='padding-top: 20px; padding-bottom: 20px;'><div style='text-align: center;'><img style='display: inline-block' src='https://firebasestorage.googleapis.com/v0/b/daikin-8f1c5.appspot.com/o/daikinlogo.png?alt=media&token=7a16ddb0-6774-4400-be37-87ff795850d5' height='50'></div><div style='margin-top: 20px; text-align: center; font-size: 24px'>Your OTP</div><div style='margin-top: 20px; text-align: center; font-size: 18px'>Please use below verification code below to verify your e-mail address. <br>The code will expire in 10 minutes and can be used only once.</div><div style='text-align: center; margin-top: 20px;'><div style='display: inline-block; line-height: 50px; letter-spacing: 10px; background: #0099E6; height: 50px; padding-left: 20px; padding-right: 10px; color: #fff; font-size: 24px; color: #fff'>"+ otp +"</div><div style='margin-top: 20px;'>If you did not request a code, please ignore this e-mail.Daikin Thailand</div></div></div>"
-//     }, {
-//     headers: { 'Authorization': 'Bearer mlsn.4afb67ee2e37f63cffec5f0379fa5baaa01b6c5fdaa75b3661f671e1f3ce045f' }
-//   })
-//   res.status(200).send('ok')
-// });
 
 app.post('/upload_firebase', multer({limits: { fieldSize: 30 * 1024 * 1024 }}).single('file') , async (req, res) => {
   console.log(req.filedata)
