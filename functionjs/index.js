@@ -618,7 +618,7 @@ const functionjs = {
         //     return downloadURL
         //   });
         // });
-        console.log('https://larkapi.soidea.co/uploadmaxfile/'+datasendtext.message_id+'/'+JSON.parse(datasendtext.content).file_key+'/'+thisstoken+'/'+userId+'/'+datamessagekey+'/'+thisforcompany.name+'/'+userId)
+        //console.log('https://larkapi.soidea.co/uploadmaxfile/'+datasendtext.message_id+'/'+JSON.parse(datasendtext.content).file_key+'/'+thisstoken+'/'+userId+'/'+datamessagekey+'/'+thisforcompany.name+'/'+userId)
         await axios.post('https://larkapi.soidea.co/uploadmaxfile/'+datasendtext.message_id+'/'+JSON.parse(datasendtext.content).file_key+'/'+thisstoken+'/'+userId+'/'+datamessagekey+'/'+thisforcompany.name+'/'+userId, {
           "linetoken": linetoken,
         }, {
