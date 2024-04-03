@@ -358,10 +358,6 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
 
   let allmessage = requestbody['events']
   let userId = allmessage[0]['source']['userId']
-  let thisstoken
-  const docRef = doc(dbstore, "userline_"+thisparam, userId)
-  const docSnap = await getDoc(docRef);
-  let thisuserdata = await docSnap.data()
 
   console.log(allmessage[0].message.text)
   let dataai = await axios.post('https://api.openai.com/v1/chat/completions', {
