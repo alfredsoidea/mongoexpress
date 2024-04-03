@@ -356,13 +356,20 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   thisforcompany = await functionjs.getForcompany(thisparam)
   let thisaitoken = thisforcompany.thisaitoken
 
+  let allmessage = requestbody['events']
+  let userId = allmessage[0]['source']['userId']
+  let thisstoken
+  const docRef = doc(dbstore, "userline_"+thisparam, userId)
+  const docSnap = await getDoc(docRef);
+  let thisuserdata = await docSnap.data()
 
+  console.log(allmessage[0].message.text)
   let dataai = await axios.post('https://api.openai.com/v1/chat/completions', {
       "model": "gpt-3.5-turbo",
       "messages": [
         {
           "role": "user",
-          "content": "จะไปทานข้าวที่ iconsiam มีร้านอะไรบ้าง"
+          "content": allmessage[0].message.text
         }
       ]
     }, {
@@ -371,8 +378,6 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       'Content-Type': 'application/json; charset=utf-8' 
     }
   })
-  let allmessage = requestbody['events']
-  let userId = allmessage[0]['source']['userId']
   
   let datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
       "to": userId,
