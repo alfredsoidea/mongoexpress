@@ -353,7 +353,8 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   let resuser,thisforcompany,thisstokenres
   let thisparam = req.params.forcompany
   let requestbody = req.body
-  let thisaitoken = "yGxDDeklTfH7oMP7yyT3BlbkFJCInCKQ7ZKYdFU0BM2nsT"
+  thisforcompany = await functionjs.getForcompany(thisparam)
+  let thisaitoken = thisforcompany.thisaitoken
 
 
   let dataai = await axios.post('https://api.openai.com/v1/chat/completions', {
@@ -366,13 +367,13 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       ]
     }, {
     headers: {
-      'Authorization': 'Bearer sk-ay'+thisaitoken,
+      'Authorization': 'Bearer '+thisaitoken,
       'Content-Type': 'application/json; charset=utf-8' 
     }
   })
   let allmessage = requestbody['events']
   let userId = allmessage[0]['source']['userId']
-  thisforcompany = await functionjs.getForcompany(thisparam)
+  
   let datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
       "to": userId,
       "messages": [
