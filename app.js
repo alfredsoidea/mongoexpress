@@ -357,17 +357,16 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   let thisaitoken = thisforcompany.thisaitoken
 
   let allmessage = requestbody['events']
-  console.log(JSON.stringify(requestbody))
+  // console.log(JSON.stringify(requestbody))
   let userId = allmessage[0]['source']['userId']
-  console.log(allmessage)
+  // console.log(allmessage)
 
-  console.log(allmessage[0].message.text)
   let dataai = await axios.post('https://api.openai.com/v1/chat/completions', {
       "model": "gpt-3.5-turbo",
       "messages": [
         {
           "role": "user",
-          "content": "how to go to siam"
+          "content": allmessage[0].message.text
         }
       ]
     }, {
@@ -378,20 +377,20 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   })
   
   let datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
-      "to": userId,
-      "messages": [
-        {
-          "type": "text",
-          "text": dataai.data.choices[0].message.content
-        }
-      ]
-    }, {
-      headers: {
-        'Authorization': 'Bearer '+thisforcompany.linetoken,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
+    "to": userId,
+    "messages": [
+      {
+        "type": "text",
+        "text": dataai.data.choices[0].message.content
       }
-    })
+    ]
+  }, {
+    headers: {
+      'Authorization': 'Bearer '+thisforcompany.linetoken,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    }
+  })
   res.status(200).send('ok')
 })
 
