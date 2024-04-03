@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import multer from 'multer';
 import request from 'request';
 import axios from 'axios';
+import OpenAI from "openai";
 
 import functionjs from "./functionjs/index.js";
 
@@ -346,5 +347,53 @@ app.post('/upload_firebase_data', multer({
   );
 
 });
+
+
+app.post('/line/chatgpt/:forcompany', async (req, res) => {
+  let resuser,thisforcompany,thisstokenres
+  let thisparam = req.params.forcompany
+  let requestbody = req.body
+
+
+  let dataai = await axios.post('https://api.openai.com/v1/chat/completions', {
+      "model": "gpt-3.5-turbo",
+      "messages": [
+        {
+          "role": "user",
+          "content": "จะไปทานข้าวที่ iconsiam มีร้านอะไรบ้าง"
+        }
+      ]
+    }, {
+    headers: {
+      'Authorization': 'Bearer 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',
+      'Content-Type': 'application/json; charset=utf-8' 
+    }
+  })
+  let allmessage = requestbody['events']
+  let userId = allmessage[0]['source']['userId']
+  thisforcompany = await functionjs.getForcompany(thisparam)
+  let datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
+      "to": userId,
+      "messages": [
+        {
+          "type": "text",
+          "text": dataai.data.choices[0].message.content
+        }
+      ]
+    }, {
+      headers: {
+        'Authorization': 'Bearer '+thisforcompany.linetoken,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    })
+  res.status(200).send('ok')
+})
+
+
+
+
+
+
 
 export default  app;
