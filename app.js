@@ -357,7 +357,9 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   let thisaitoken = thisforcompany.thisaitoken
 
   let allmessage = requestbody['events']
+  console.log(JSON.stringify(requestbody))
   let userId = allmessage[0]['source']['userId']
+  console.log(allmessage)
 
   console.log(allmessage[0].message.text)
   let dataai = await axios.post('https://api.openai.com/v1/chat/completions', {
@@ -365,7 +367,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       "messages": [
         {
           "role": "user",
-          "content": allmessage[0].message.text
+          "content": "how to go to siam"
         }
       ]
     }, {
