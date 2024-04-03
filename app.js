@@ -4,7 +4,6 @@ import helmet from 'helmet';
 import multer from 'multer';
 import request from 'request';
 import axios from 'axios';
-import OpenAI from "openai";
 
 import functionjs from "./functionjs/index.js";
 
@@ -29,7 +28,6 @@ import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable, upl
 import { 
           getDoc,
           getDocs,
-          deleteDoc,
           where,
           orderBy,
           doc,
@@ -187,30 +185,6 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
     let responsequery = await functionjs.query_message_by_user(thisstoken, thisforcompany , userId)
     console.log(responsequery)
     await res.status(200).send('ok')
-  }
-})
-
-app.post('/lark/clearpre/:forcompany', async (req, res) => {
-  let thisparam = req.params.forcompany
-  let dataref = collection(dbstore, "userline_"+thisparam)
-  let thisforcompany,thisstokenres
-  let requestbody = req.body
-  thisforcompany = await functionjs.getForcompany(thisparam)
-  console.log(JSON.stringify(req.body))
-  console.log(req.body)
-  const q = query(dataref, where("larkchatid", "==", "pre") );
-  const querySnapshot = await getDocs(q);
-  let newdatajson = []
-  await querySnapshot.forEach(async (doc) => {
-    let bodydata = doc.data()
-    bodydata.id = doc.id
-    newdatajson.push(bodydata)
-  });
-  if (thisforcompany) {
-  await newdatajson.forEach(async (element) => {
-      await deleteDoc(doc(dbstore, "userline_"+thisparam, element.id));
-    
-  });
   }
 })
 
@@ -372,12 +346,5 @@ app.post('/upload_firebase_data', multer({
   );
 
 });
-
-
-
-
-
-
-
 
 export default  app;
