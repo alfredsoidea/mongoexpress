@@ -72,7 +72,7 @@ app.get('/mockuproom/:forcompany/:roomid', async (req, res) => {
     data: {
       "id_list": [ "d9cdg11a","6dae7g89","7fbdbba2","22d2d869","64b6ffa4","bf6a1c16","19ed8f51","8317b15e","faa997a2","9gdc9a6c","54eg842f","b5459dc6","db2dgba3","gb5f4833","b4gfa3d5","c8252377","f5b74daa","6dbg4e65","fd8gef52","85612fc1","46398ccb","e7g76dg8" ]
     },
-    url: "https://open.larksuite.com/open-apis/im/v1/chats/oc_c356a428a47424c9a3a4de63cbba4697/members?member_id_type=user_id"
+    url: "https://open.larksuite.com/open-apis/im/v1/chats/oc_ff26299b3f209df8dce934061b9c76d5/members?member_id_type=user_id"
   })
   await res.status(200).send(thisstoken)
 });
@@ -131,20 +131,31 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   const docRef = doc(dbstore, "userline_"+thisparam, userId)
   const docSnap = await getDoc(docRef);
   let thisuserdata = await docSnap.data()
+  await allmessage.forEach((currentElement, index) => {
+    if (currentElement.message.type == 'text' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image') {
+      addDoc(collection(dbstore, "message_line_"+thisparam), {
+        init_timestamp: currentElement.timestamp,
+        user_id: userId,
+        message_data: currentElement,
+        status: "wait",
+        forcompany: thisparam,
+        timestamp: serverTimestamp(),
+        created_at: Date.now()
+      });
+    } else {
+      addDoc(collection(dbstore, "message_line_error_"+thisparam), {
+        init_timestamp: currentElement.timestamp,
+        user_id: userId,
+        message_data: currentElement,
+        status: "wait",
+        forcompany: thisparam,
+        timestamp: serverTimestamp(),
+        created_at: Date.now()
+      });
+    }
+  })
   if (docSnap.exists()) {
-    await allmessage.forEach((currentElement, index) => {
-      if (currentElement.type != 'unfollow' && currentElement.type != 'follow') {
-        addDoc(collection(dbstore, "message_line_"+thisparam), {
-          init_timestamp: currentElement.timestamp,
-          user_id: userId,
-          message_data: currentElement,
-          status: "wait",
-          forcompany: thisparam,
-          timestamp: serverTimestamp(),
-          created_at: Date.now()
-        });
-      }
-    })
+    
     if (thisuserdata.larkchatid == "pre") {
       await res.status(200).send('ok')
     } else {
@@ -167,19 +178,6 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
     thisforcompany = await functionjs.getForcompany(thisparam)
     thisstokenres = await functionjs.getTokenlark(thisforcompany)
     thisstoken = thisstokenres
-    await allmessage.forEach((currentElement, index) => {
-      if (currentElement.type != 'unfollow' && currentElement.type != 'follow') {
-        addDoc(collection(dbstore, "message_line_"+thisparam), {
-          init_timestamp: currentElement.timestamp,
-          user_id: userId,
-          message_data: currentElement,
-          status: "wait",
-          forcompany: thisparam,
-          timestamp: serverTimestamp(),
-          created_at: Date.now()
-        });
-      }
-    })
     let responsecreate = await functionjs.create_userline(thisforcompany, userId, thisstoken)
     console.log(responsecreate)
     let responsequery = await functionjs.query_message_by_user(thisstoken, thisforcompany , userId)
@@ -262,40 +260,44 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   let requestbody = req.body
   thisforcompany = await functionjs.getForcompany(thisparam)
   let thisaitoken = thisforcompany.thisaitoken
-  if (requestbody['events']) {
-    let allmessage = requestbody['events']
-    let userId = allmessage[0]['source']['userId']
-    let dataai = await axios.post('https://api.openai.com/v1/chat/completions', {
-        "model": "gpt-3.5-turbo",
-        "messages": [
-          {
-            "role": "user",
-            "content": allmessage[0].message.text
-          }
-        ]
-      }, {
-      headers: {
-        'Authorization': 'Bearer '+thisaitoken,
-        'Content-Type': 'application/json; charset=utf-8' 
-      }
-    })
-    
-    let datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
-      "to": userId,
+  //if (requestbody['events']) {
+  //let allmessage = requestbody['events']
+  //let userId = allmessage[0]['source']['userId']
+  let dataai = await axios.post('https://api.openai.com/v1/chat/completions', {
+      "model": "gpt-4",
       "messages": [
         {
-          "type": "text",
-          "text": dataai.data.choices[0].message.content
+          "role": "user",
+          "content": "can you visit internet"
         }
       ]
     }, {
-      headers: {
-        'Authorization': 'Bearer '+thisforcompany.linetoken,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    })
-  }
+    headers: {
+      'Authorization': 'Bearer '+thisaitoken,
+      'Content-Type': 'application/json; charset=utf-8' 
+    }
+  })
+
+    console.log(dataai.data.choices)
+
+
+    
+    // let datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
+    //   "to": userId,
+    //   "messages": [
+    //     {
+    //       "type": "text",
+    //       "text": dataai.data.choices[0].message.content
+    //     }
+    //   ]
+    // }, {
+    //   headers: {
+    //     'Authorization': 'Bearer '+thisforcompany.linetoken,
+    //     'Content-Type': 'application/json',
+    //     'Accept': 'application/json'
+    //   }
+    // })
+  //}
   res.status(200).send('ok')
 })
 
