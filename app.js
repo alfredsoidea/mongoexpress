@@ -256,6 +256,50 @@ app.post('/line-checkdata/:forcompany', async (req, res) => {
 })
 
 
+app.post('/line/chatgpt/:forcompany', async (req, res) => {
+  let resuser,thisforcompany,thisstokenres
+  let thisparam = req.params.forcompany
+  let requestbody = req.body
+  thisforcompany = await functionjs.getForcompany(thisparam)
+  let thisaitoken = thisforcompany.thisaitoken
+  if (requestbody['events']) {
+    let allmessage = requestbody['events']
+    let userId = allmessage[0]['source']['userId']
+    let dataai = await axios.post('https://api.openai.com/v1/chat/completions', {
+        "model": "gpt-3.5-turbo",
+        "messages": [
+          {
+            "role": "user",
+            "content": allmessage[0].message.text
+          }
+        ]
+      }, {
+      headers: {
+        'Authorization': 'Bearer '+thisaitoken,
+        'Content-Type': 'application/json; charset=utf-8' 
+      }
+    })
+    
+    let datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
+      "to": userId,
+      "messages": [
+        {
+          "type": "text",
+          "text": dataai.data.choices[0].message.content
+        }
+      ]
+    }, {
+      headers: {
+        'Authorization': 'Bearer '+thisforcompany.linetoken,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    })
+  }
+  res.status(200).send('ok')
+})
+
+
 app.post('/upload_firebase', multer({limits: { fieldSize: 30 * 1024 * 1024 }}).single('file') , async (req, res) => {
   console.log(req.filedata)
   console.log("req.file end")
