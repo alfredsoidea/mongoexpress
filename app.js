@@ -70,7 +70,7 @@ app.get('/mockuproom/:forcompany/:roomid', async (req, res) => {
     data: {
       "id_list": [ "d9cdg11a","6dae7g89","7fbdbba2","22d2d869","64b6ffa4","bf6a1c16","19ed8f51","8317b15e","faa997a2","9gdc9a6c","54eg842f","b5459dc6","db2dgba3","gb5f4833","b4gfa3d5","c8252377","f5b74daa","6dbg4e65","fd8gef52","85612fc1","46398ccb","e7g76dg8" ]
     },
-    url: "https://open.larksuite.com/open-apis/im/v1/chats/oc_ff26299b3f209df8dce934061b9c76d5/members?member_id_type=user_id"
+    url: "https://open.larksuite.com/open-apis/im/v1/chats/oc_2c20c7a8fc2414af4c7923edd7083c9b/members?member_id_type=user_id"
   })
   await res.status(200).send(thisstoken)
 });
@@ -258,6 +258,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   let requestbody = req.body
   thisforcompany = await functionjs.getForcompany(thisparam)
   let thisaitoken = thisforcompany.thisaitoken
+  console.log(JSON.stringify(requestbody))
   if (requestbody['events']) {
   let allmessage = requestbody['events']
   let userId = allmessage[0]['source']['userId']
@@ -266,7 +267,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       "messages": [
         {
           "role": "user",
-          "content": "'การเดินทางไป Siam Paragon' เป็นคำถามเกี่ยวกับอะไร"
+          "content": allmessage[0].message.type
         }
       ]
     }, {
