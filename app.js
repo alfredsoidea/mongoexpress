@@ -279,8 +279,8 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
     })
     console.log(dataai.data)
     console.log(dataai.data.choices)
-      if (dataai.data.choices[0].message.content.toLowerCase().replace(/\s/g, '').replace('.', '') != 'support') {
-
+      if (dataai.data.choices[0].message.content.toLowerCase().replace(/\s/g, '').replace('.', '').replace('\'', '') != 'support') {
+        //e5ac2d23, 693ed1af
         datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
           "to": userId,
           "messages": [
