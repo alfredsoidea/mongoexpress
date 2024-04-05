@@ -7,8 +7,6 @@ import axios from 'axios';
 
 import functionjs from "./functionjs/index.js";
 
-console.log(functionjs.sayHello())
-
 import cors from 'cors';
 
 import { initializeApp } from "firebase/app";
@@ -260,15 +258,15 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   let requestbody = req.body
   thisforcompany = await functionjs.getForcompany(thisparam)
   let thisaitoken = thisforcompany.thisaitoken
-  //if (requestbody['events']) {
-  //let allmessage = requestbody['events']
-  //let userId = allmessage[0]['source']['userId']
+  if (requestbody['events']) {
+  let allmessage = requestbody['events']
+  let userId = allmessage[0]['source']['userId']
   let dataai = await axios.post('https://api.openai.com/v1/chat/completions', {
       "model": "gpt-4",
       "messages": [
         {
           "role": "user",
-          "content": "can you visit internet"
+          "content": "'การเดินทางไป Siam Paragon' เป็นคำถามเกี่ยวกับอะไร"
         }
       ]
     }, {
@@ -280,24 +278,22 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
 
     console.log(dataai.data.choices)
 
-
-    
-    // let datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
-    //   "to": userId,
-    //   "messages": [
-    //     {
-    //       "type": "text",
-    //       "text": dataai.data.choices[0].message.content
-    //     }
-    //   ]
-    // }, {
-    //   headers: {
-    //     'Authorization': 'Bearer '+thisforcompany.linetoken,
-    //     'Content-Type': 'application/json',
-    //     'Accept': 'application/json'
-    //   }
-    // })
-  //}
+    let datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
+      "to": userId,
+      "messages": [
+        {
+          "type": "text",
+          "text": dataai.data.choices[0].message.content
+        }
+      ]
+    }, {
+      headers: {
+        'Authorization': 'Bearer '+thisforcompany.linetoken,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    })
+  }
   res.status(200).send('ok')
 })
 
