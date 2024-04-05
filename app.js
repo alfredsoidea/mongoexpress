@@ -263,12 +263,28 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
     let allmessage = requestbody['events']
     let userId = allmessage[0]['source']['userId']
 
+    const preContextMessages = [
+      "Please check if you cannot answer the question please type support back",
+      "if you can answer please ac like real human that work as a callcenter"
+    ];
+    const mainQuestion = allmessage[0].message.text;
+
+    const messages = [
+      { role: "system", content: "Note: if cannot answer this question please text 'support' back" },
+      { role: "system", content: "Note: Please provide simple and brief answers." },
+      { role: "user", content: "Question: " + mainQuestion },
+    ];
+
+    console.log(messages)
+
+
     let dataai = await axios.post('https://api.openai.com/v1/chat/completions', {
-        "model": "gpt-4",
-        "messages": [
+        model: "gpt-4",
+        messages: 
+        [
           {
-            "role": "user",
-            "content": "please ac like good staff and answer this question in summarize and if you cannot answer this question type a code \'support\' : "+allmessage[0].message.text
+            role: "system",
+            content: "Note: if don't have capabilities or access for this question you must type text 'support' back , Question: "+mainQuestion+"?"
           }
         ]
       }, {
@@ -279,8 +295,30 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
     })
     console.log(dataai.data)
     console.log(dataai.data.choices)
-      if (dataai.data.choices[0].message.content.toLowerCase().replace(/\s/g, '').replace('.', '').replace('\'', '') != 'support') {
-        //e5ac2d23, 693ed1af
+      await allmessage.forEach((currentElement, index) => {
+        if (currentElement.message.type == 'text' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image') {
+          addDoc(collection(dbstore, "message_line_"+thisparam), {
+            init_timestamp: currentElement.timestamp,
+            user_id: userId,
+            message_data: currentElement,
+            status: "wait",
+            forcompany: thisparam,
+            timestamp: serverTimestamp(),
+            created_at: Date.now()
+          });
+        } else {
+          addDoc(collection(dbstore, "message_line_error_"+thisparam), {
+            init_timestamp: currentElement.timestamp,
+            user_id: userId,
+            message_data: currentElement,
+            status: "wait",
+            forcompany: thisparam,
+            timestamp: serverTimestamp(),
+            created_at: Date.now()
+          });
+        }
+      })
+      if (dataai.data.choices[0].message.content.toLowerCase().replace(/\s/g, '').replace('.', '') != 'support') {
         datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
           "to": userId,
           "messages": [
@@ -297,21 +335,39 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
           }
         })
       } else {
-        datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
-          "to": userId,
-          "messages": [
-            {
-              "type": "text",
-              "text": "We are adding support team to handle your question."
-            }
-          ]
-        }, {
-          headers: {
-            'Authorization': 'Bearer '+thisforcompany.linetoken,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+        const docRef = doc(dbstore, "userline_"+thisparam, userId)
+        //e5ac2d23, 693ed1af
+        const docSnap = await getDoc(docRef);
+        let thisuserdata = await docSnap.data()
+        
+        if (docSnap.exists()) {
+          if (thisuserdata.larkchatid == "pre") {
+            await res.status(200).send('ok')
+          } else {
+            resuser = await functionjs.get_userline_data_gpt(thisforcompany, userId, thisstoken)
+            thisforcompany = await functionjs.getForcompany(thisparam)
+            thisstokenres = await functionjs.getTokenlark(thisforcompany)
+            thisstoken = thisstokenres
+            await functionjs.query_message_by_user_gpt(thisstoken, thisforcompany , userId)
+            await res.status(200).send('ok')
           }
-        })
+        } else {
+          await setDoc(doc(dbstore, "userline_"+thisparam, userId), {
+            forcompany: thisparam,
+            timestamp: serverTimestamp(),
+            displayname: "pre",
+            larkchatid: "pre",
+            pictureurl: "pre",
+            user_id: userId
+          });
+          thisforcompany = await functionjs.getForcompany(thisparam)
+          thisstokenres = await functionjs.getTokenlark(thisforcompany)
+          let responsecreate = await functionjs.create_userline_gpt(thisforcompany, userId, thisstokenres)
+          console.log(responsecreate)
+          let responsequery = await functionjs.query_message_by_user_gpt(thisstokenres, thisforcompany , userId)
+          console.log(responsequery)
+          await res.status(200).send('ok')
+        }
       }
   }
   res.status(200).send('ok')

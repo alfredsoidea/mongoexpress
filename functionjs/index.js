@@ -53,12 +53,47 @@ const functionjs = {
     let thisuserdata = await docSnap.data()
     return thisuserdata
   },
+  get_userline_data_gpt: async function (thisforcompany, userId) {
+    const docRef = await doc(dbstore, "userline_"+thisforcompany, userId)
+    const docSnap = await getDoc(docRef);
+    let thisuserdata = await docSnap.data()
+    return thisuserdata
+  },
   get_userline_data_larkchat: async function (thisforcompany, larkchatid) {
     const q = query(collection(dbstore, "userline_"+thisforcompany.name), where("larkchatid", "==", larkchatid));
     const querySnapshot = await getDocs(q);
     let userdata = ""
     querySnapshot.forEach((doc) => { userdata = doc.data() });
     return userdata
+  },
+  create_larkchat_gpt: async function (thisforcompany, displayName, imagekey, thisstoken, userId) {
+    let thisdata = []
+    let getUserinitAdmin = await axios.get("https://larkapi.soidea.co/getuserinit/"+thisforcompany.name)
+    console.log("getUserinitAdmin")
+    await getUserinitAdmin.data.forEach((element) => {
+      if (userId == 'U19676ac8b7cbd97b66e4c6b3d917f049') {
+        if (element.email == 'alfred@soidea.co' || element.email == 'chate@soidea.co') {
+          thisdata.push(element.userlark_id)  
+        }
+      } else {
+        thisdata.push(element.userlark_id)
+      }
+    });
+    console.log("thisdata")
+    let response = await axios.post('https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=user_id', {
+      "name": displayName,
+      "avatar": imagekey,
+      "bot_id_list": [ thisforcompany.lark_app_api ],
+      "user_id_list": thisdata
+    }, {
+      headers: {
+        'Authorization': 'Bearer ' + thisstoken,
+        'Content-Type': 'application/json; charset=utf-8"' 
+      }
+    })
+    console.log("responsenow")
+    console.log(response)
+    return response.data.data.chat_id;
   },
   create_larkchat: async function (thisforcompany, displayName, imagekey, thisstoken, userId) {
     let thisdata = []
@@ -113,6 +148,50 @@ const functionjs = {
     return response
   },
   check_messagestatus: async function(thisforcompany, userId) {
+  },
+  create_userline_gpt: async function(thisforcompany, userId, thisstoken) {
+    let lark_app_api = thisforcompany.lark_app_api
+    let lark_app_secret = thisforcompany.lark_app_secret
+    let linetoken = thisforcompany.linetoken
+    let userfromline = await functionjs.get_user_from_line(userId, linetoken)
+    let userDisplayname, userDisplayImage, avatarData, avatarKey, newlarkchatid, newUserdata
+    if (userfromline.displayName) {
+      userDisplayname = await userfromline.displayName
+    } else {
+      userDisplayname = ""
+    }
+
+    if (userfromline.pictureUrl) {
+      userDisplayImage = await userfromline.pictureUrl
+    } else {
+      userDisplayImage = "none"
+    }
+
+    const userDocRef = doc(dbstore, "userline_"+thisforcompany.name, userId);
+    await runTransaction(dbstore, async (transaction) => {
+      await transaction.update(userDocRef, { 
+        displayname: userDisplayname,
+        pictureurl: userDisplayImage
+      });
+    });
+    if (userDisplayImage == "none") {
+      newlarkchatid = await functionjs.create_larkchat_gpt(thisforcompany, userDisplayname , "none", thisstoken, userId)
+      newUserdata = await runTransaction(dbstore, async (transaction) => {
+        await transaction.update(userDocRef, { 
+          larkchatid: newlarkchatid
+        })
+      })
+    } else {
+      avatarData = await functionjs.upload_avatar_lark(userfromline.pictureUrl , thisstoken)
+      avatarKey = await avatarData.data.data.image_key
+      newlarkchatid = await functionjs.create_larkchat_gpt(thisforcompany, userDisplayname , avatarKey, thisstoken, userId)
+      newUserdata = await runTransaction(dbstore, async (transaction) => {
+        await transaction.update(userDocRef, { 
+          larkchatid: newlarkchatid
+        })
+      })
+    }
+    return newlarkchatid
   },
   create_userline: async function(thisforcompany, userId, thisstoken) {
     console.log("functionjscreate_userline")
@@ -644,6 +723,21 @@ const functionjs = {
 
     //let messagejson = [];
     //console.log(thisforcompany)
+    await newdatajson.forEach(async (element) => {
+      await functionjs.send_message_by_userid(thisstoken, thisforcompany, userId, element)
+    });
+    console.log("start query_message_by_user")
+  },
+  query_message_by_user_gpt: async function (thisstoken, thisforcompany, userId) {
+    let dataref = collection(dbstore, "message_line_"+thisforcompany.name)
+    const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userId) );
+    const querySnapshot = await getDocs(q);
+    let newdatajson = []
+    await querySnapshot.forEach(async (doc) => {
+      let bodydata = doc.data()
+      bodydata.id = doc.id
+      newdatajson.push(bodydata)
+    });
     await newdatajson.forEach(async (element) => {
       await functionjs.send_message_by_userid(thisstoken, thisforcompany, userId, element)
     });
