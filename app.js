@@ -253,7 +253,7 @@ app.post('/line-checkdata/:forcompany', async (req, res) => {
 
 
 app.post('/line/chatgpt/:forcompany', async (req, res) => {
-  let resuser,thisforcompany,thisstokenres
+  let resuser,thisforcompany,thisstokenres,datareturn
   let thisparam = req.params.forcompany
   let requestbody = req.body
   thisforcompany = await functionjs.getForcompany(thisparam)
@@ -262,6 +262,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   if (requestbody['events']) {
   let allmessage = requestbody['events']
   let userId = allmessage[0]['source']['userId']
+
   let dataai = await axios.post('https://api.openai.com/v1/chat/completions', {
       "model": "gpt-4",
       "messages": [
@@ -277,23 +278,40 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
     }
   })
 
-    console.log(dataai.data.choices)
+    if (dataai.data.choices) {
 
-    let datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
-      "to": userId,
-      "messages": [
-        {
-          "type": "text",
-          "text": dataai.data.choices[0].message.content
+      datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
+        "to": userId,
+        "messages": [
+          {
+            "type": "text",
+            "text": dataai.data.choices[0].message.content
+          }
+        ]
+      }, {
+        headers: {
+          'Authorization': 'Bearer '+thisforcompany.linetoken,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         }
-      ]
-    }, {
-      headers: {
-        'Authorization': 'Bearer '+thisforcompany.linetoken,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    })
+      })
+    }
+  } else {
+    datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
+        "to": userId,
+        "messages": [
+          {
+            "type": "text",
+            "text": "We are adding support team to handle your question."
+          }
+        ]
+      }, {
+        headers: {
+          'Authorization': 'Bearer '+thisforcompany.linetoken,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      })
   }
   res.status(200).send('ok')
 })
