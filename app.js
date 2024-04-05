@@ -268,7 +268,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
         "messages": [
           {
             "role": "user",
-            "content": "please ac like good staff and answer in summarize: "+allmessage[0].message.text
+            "content": "please ac like good staff and answer this question in summarize and please type a code only \'support\' if you cannot answer this question: "+allmessage[0].message.text
           }
         ]
       }, {
@@ -277,8 +277,9 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
         'Content-Type': 'application/json; charset=utf-8' 
       }
     })
-
-      if (dataai.data.choices) {
+    console.log(dataai.data)
+    console.log(dataai.data.choices)
+      if (dataai.data.choices[0].message.content.toLowerCase().replace(/\s/g, '').replace('.', '') != 'support') {
 
         datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
           "to": userId,
