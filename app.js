@@ -267,7 +267,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       "messages": [
         {
           "role": "user",
-          "content": "please ac like siam paragon staff: "+allmessage[0].message.text
+          "content": "please ac like good staff and answer in summarize: "+allmessage[0].message.text
         }
       ]
     }, {
