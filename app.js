@@ -298,7 +298,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   
 
   const configuration = {
-    apiKey: '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',
+    apiKey: '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',
     organization: 'org-IqzxlMpDHEs7QoKH634Hg1Ba'
   };
   const openai = new OpenAI(configuration);
