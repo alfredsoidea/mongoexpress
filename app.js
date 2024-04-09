@@ -297,11 +297,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   let requestbody = req.body
   
 
-  const configuration = {
-    apiKey: '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',
-    organization: 'org-IqzxlMpDHEs7QoKH634Hg1Ba'
-  };
-  const openai = new OpenAI(configuration);
+  
 
     
 
@@ -312,6 +308,12 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   resuser = await functionjs.get_userline_data(thisforcompany, userId, thisstokenres)
   let thisaitoken = thisforcompany.thisaitoken
   console.log(JSON.stringify(requestbody))
+
+  const configuration = {
+    apiKey: thisaitoken,
+    organization: 'org-IqzxlMpDHEs7QoKH634Hg1Ba'
+  };
+  const openai = new OpenAI(configuration);
     
     const docRef = doc(dbstore, "userline_"+thisparam, userId)
     const docSnap = await getDoc(docRef);
@@ -344,7 +346,6 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       if (thisuserdata.larkchatid == "pre") {
         await res.status(200).send('ok')
       } else {
-        thisstokenres = await functionjs.getTokenlark(thisforcompany)
         await functionjs.query_message_by_user(thisstokenres, thisforcompany , userId)
         await res.status(200).send('ok')
       }
@@ -357,10 +358,9 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
         pictureurl: "pre",
         user_id: userId
       });
-      thisstoken = thisstokenres
-      let responsecreate = await functionjs.create_userline(thisforcompany, userId, thisstoken)
+      let responsecreate = await functionjs.create_userline(thisforcompany, userId, thisstokenres)
       console.log(responsecreate)
-      let responsequery = await functionjs.query_message_by_user(thisstoken, thisforcompany , userId)
+      let responsequery = await functionjs.query_message_by_user(thisstokenres, thisforcompany , userId)
       console.log(responsequery)
       await res.status(200).send('ok')
     }
