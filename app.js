@@ -295,17 +295,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   let resuser,thisforcompany,thisstokenres,datareturn
   let thisparam = req.params.forcompany
   let requestbody = req.body
-  
-
-  
-
-    
-
-    let allmessage = requestbody['events']
-    let userId = allmessage[0]['source']['userId']
   thisforcompany = await functionjs.getForcompany(thisparam)
-  thisstokenres = await functionjs.getTokenlark(thisforcompany)
-  resuser = await functionjs.get_userline_data(thisforcompany, userId, thisstokenres)
   let thisaitoken = thisforcompany.thisaitoken
   console.log(JSON.stringify(requestbody))
 
@@ -314,56 +304,13 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
     organization: 'org-IqzxlMpDHEs7QoKH634Hg1Ba'
   };
   const openai = new OpenAI(configuration);
+
     
-    const docRef = doc(dbstore, "userline_"+thisparam, userId)
-    const docSnap = await getDoc(docRef);
-    let thisuserdata = await docSnap.data()
-    await allmessage.forEach((currentElement, index) => {
-      if (currentElement.message.type == 'text' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image') {
-        addDoc(collection(dbstore, "message_line_"+thisparam), {
-          init_timestamp: currentElement.timestamp,
-          user_id: userId,
-          message_data: currentElement,
-          status: "wait",
-          forcompany: thisparam,
-          timestamp: serverTimestamp(),
-          created_at: Date.now()
-        });
-      } else {
-        addDoc(collection(dbstore, "message_line_error_"+thisparam), {
-          init_timestamp: currentElement.timestamp,
-          user_id: userId,
-          message_data: currentElement,
-          status: "wait",
-          forcompany: thisparam,
-          timestamp: serverTimestamp(),
-          created_at: Date.now()
-        });
-      }
-    })
-    if (docSnap.exists()) {
-      
-      if (thisuserdata.larkchatid == "pre") {
-        await res.status(200).send('ok')
-      } else {
-        await functionjs.query_message_by_user(thisstokenres, thisforcompany , userId)
-        await res.status(200).send('ok')
-      }
-    } else {
-      await setDoc(doc(dbstore, "userline_"+thisparam, userId), {
-        forcompany: thisparam,
-        timestamp: serverTimestamp(),
-        displayname: "pre",
-        larkchatid: "pre",
-        pictureurl: "pre",
-        user_id: userId
-      });
-      let responsecreate = await functionjs.create_userline(thisforcompany, userId, thisstokenres)
-      console.log(responsecreate)
-      let responsequery = await functionjs.query_message_by_user(thisstokenres, thisforcompany , userId)
-      console.log(responsequery)
-      await res.status(200).send('ok')
-    }
+
+  if (requestbody['events']) {
+    let allmessage = requestbody['events']
+    let userId = allmessage[0]['source']['userId']
+    
 
     const dataai = await openai.chat.completions.create({
       model: "gpt-4",
@@ -387,7 +334,9 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       timestamp: serverTimestamp(),
       created_at: Date.now()
     });
-    resuser = await functionjs.get_userline_data(thisforcompany, userId, thisstokenres)
+    let thisforcompany = await functionjs.getForcompany(thisparam)
+    let thisstoken = await functionjs.getTokenlark(thisforcompany)
+    resuser = await functionjs.get_userline_data(thisforcompany, userId, thisstoken)
     let dataref = collection(dbstore, "message_lark_"+thisforcompany.name)
     const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userId) );
     const querySnapshot = await getDocs(q);
@@ -398,8 +347,9 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       newdatajson.push(bodydata)
     });
     await newdatajson.forEach(async (element) => {
-      await functionjs.send_message_from_lark(thisstokenres, thisforcompany, userId, element)
+      await functionjs.send_message_from_lark(thisstoken, thisforcompany, userId, element)
     });
+  }
   res.status(200).send('ok')
 })
 
