@@ -424,6 +424,10 @@ app.post('/lark/chatgpt-bot/:forcompany', async (req, res) => {
   thisforcompany = await functionjs.getForcompany(thisparam)
   //let thisaitoken = thisforcompany.thisaitoken
   console.log(JSON.stringify(requestbody))
+  if (requestbody.type == "url_verification") {
+    //console.log({ "challenge": requestbody.challenge })
+    await res.status(200).send({ "challenge": requestbody.challenge })
+  }
 })
 
 
