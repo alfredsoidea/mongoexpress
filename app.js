@@ -310,7 +310,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   if (requestbody['events']) {
     let allmessage = requestbody['events']
     let userId = allmessage[0]['source']['userId']
-    
+
 
     const dataai = await openai.chat.completions.create({
       model: "gpt-4",
@@ -346,8 +346,25 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       bodydata.id = doc.id
       newdatajson.push(bodydata)
     });
+    let datasendtext
+let datareturn
     await newdatajson.forEach(async (element) => {
-      await functionjs.send_message_from_lark(thisstoken, thisforcompany, userId, element)
+      datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
+        "to": userId,
+        "messages": [
+          {
+            "type": 'text',
+            "text": dataai.choices[0].message.content
+          }
+        ]
+      }, {
+        headers: {
+          'Authorization': 'Bearer '+thisforcompany.linetoken,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      })
+      await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
     });
   }
   res.status(200).send('ok')
