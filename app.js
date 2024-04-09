@@ -422,11 +422,48 @@ app.post('/lark/chatgpt-bot/:forcompany', async (req, res) => {
   let thisparam = req.params.forcompany
   let requestbody = req.body
   let thisforcompany = await functionjs.getForcompany(thisparam)
-  //let thisaitoken = thisforcompany.thisaitoken
+  let thisaitoken = thisforcompany.thisaitoken
+  const configuration = {
+    apiKey: thisaitoken,
+    organization: 'org-IqzxlMpDHEs7QoKH634Hg1Ba'
+  };
+  const openai = new OpenAI(configuration);
   console.log(JSON.stringify(requestbody))
   if (requestbody.type == "url_verification") {
     //console.log({ "challenge": requestbody.challenge })
     await res.status(200).send({ "challenge": requestbody.challenge })
+  } else {
+    let thischat_id = requestbody['event']['message']['chat_id']
+    let thistextget = requestbody['event']['message']['content']
+    thistextget = JSON.parse(thistextget)
+    //console.log(chat_id)
+    const dataai = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          "role": "user", 
+          "content": "please answer this question As an information center staff with a thai woman persona, I provide concise and definitive answers about Iconsiam and Siam Paragon, focusing on store locations. the question is :" + thistextget['text']
+        }
+      ]
+    });
+    console.log(dataai)
+    //console.log(dataai.choices[0].message.content)
+    let datasendtext = dataai.choices[0].message.content
+      if (datasendtext.includes('@_')) {} else {
+        let thisstokenres = await functionjs.getTokenlark(thisforcompany)
+        let datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+          "receive_id": thischat_id,
+          "msg_type": "text",
+          "content": JSON.stringify({ "text": datasendtext })
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstokenres,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+      }
+      await res.status(200).send('ok')
   }
 })
 
