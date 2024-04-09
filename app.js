@@ -347,8 +347,10 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       newdatajson.push(bodydata)
     });
     let datasendtext
-let datareturn
+    let datareturn
     await newdatajson.forEach(async (element) => {
+      console.log(element.id)
+      await functionjs.set_larkmessage_status(element.id, thisforcompany, 'sent')
       datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
         "to": userId,
         "messages": [
@@ -364,7 +366,6 @@ let datareturn
           'Accept': 'application/json'
         }
       })
-      await functionjs.set_message_status(element.id, thisforcompany, 'sent')
     });
   }
   res.status(200).send('ok')
