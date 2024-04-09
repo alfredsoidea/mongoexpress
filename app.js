@@ -364,7 +364,7 @@ let datareturn
           'Accept': 'application/json'
         }
       })
-      //await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+      await functionjs.set_message_status(element.id, thisforcompany, 'sent')
     });
   }
   res.status(200).send('ok')
