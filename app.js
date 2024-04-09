@@ -319,9 +319,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
           "role": "user", 
           "content": " " + allmessage[0]['message']['text'] + "please answer this question As an information center staff with a woman persona, I provide concise and definitive answers about Iconsiam and Siam Paragon, focusing on store locations, dining options, and promotions without using uncertain language."
         }
-      ],
-      max_tokens: 7,
-      temperature: 0,
+      ]
     });
 
     console.log(dataai)
