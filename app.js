@@ -421,7 +421,7 @@ app.listen(port, () => {
 app.post('/lark/chatgpt-bot/:forcompany', async (req, res) => {
   let thisparam = req.params.forcompany
   let requestbody = req.body
-  thisforcompany = await functionjs.getForcompany(thisparam)
+  let thisforcompany = await functionjs.getForcompany(thisparam)
   //let thisaitoken = thisforcompany.thisaitoken
   console.log(JSON.stringify(requestbody))
   if (requestbody.type == "url_verification") {
