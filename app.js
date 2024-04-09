@@ -418,6 +418,15 @@ app.listen(port, () => {
   console.log(`Listening: http://localhost:${port}`);
 });
 
+app.post('/lark/chatgpt-bot/:forcompany', async (req, res) => {
+  let thisparam = req.params.forcompany
+  let requestbody = req.body
+  thisforcompany = await functionjs.getForcompany(thisparam)
+  //let thisaitoken = thisforcompany.thisaitoken
+  console.log(JSON.stringify(requestbody))
+})
+
+
 app.post('/upload_firebase_data', multer({
     limits: { fieldSize: 30 * 1024 * 1024 }
   }).single('file') , async (req, res) => {
