@@ -442,7 +442,7 @@ app.post('/lark/chatgpt-bot/:forcompany', async (req, res) => {
       messages: [
         {
           "role": "user", 
-          "content": "please answer this question As an information center staff with a thai woman persona, I provide concise and definitive answers about Iconsiam and Siam Paragon, focusing on store locations. the question is :" + thistextget['text']
+          "content": "Please ac like iconsiam woman staff and answer the question in simple language and do not answer more than 200 characters. Question:" + thistextget['text']
         }
       ]
     });
