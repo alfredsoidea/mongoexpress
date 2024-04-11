@@ -317,7 +317,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       messages: [
         {
           "role": "user", 
-          "content": "Please ac like iconsiam woman staff ans answer the question in simple language and do not answer more than 200 characters. Question:" + allmessage[0]['message']['text']
+          "content": "Please ac like iconsiam woman staff and answer the question in simple language and do not answer more than 200 characters. Question:" + allmessage[0]['message']['text']
         }
       ]
     });
