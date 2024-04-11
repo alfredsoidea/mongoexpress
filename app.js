@@ -101,9 +101,9 @@ app.get('/mockuproom/:forcompany/:roomid', async (req, res) => {
     },
     method: "DELETE",
     data: {
-      "id_list": [ "d9cdg11a","6dae7g89","7fbdbba2","22d2d869","64b6ffa4","bf6a1c16","19ed8f51","8317b15e","faa997a2","9gdc9a6c","54eg842f","b5459dc6","db2dgba3","gb5f4833","b4gfa3d5","c8252377","f5b74daa","6dbg4e65","fd8gef52","85612fc1","46398ccb","e7g76dg8" ]
+      "id_list": [ "f435agf8" ]
     },
-    url: "https://open.larksuite.com/open-apis/im/v1/chats/oc_2c20c7a8fc2414af4c7923edd7083c9b/members?member_id_type=user_id"
+    url: "https://open.larksuite.com/open-apis/im/v1/chats/oc_9b1b87f5c8ae311d93ab1ab29c03d048/members?member_id_type=user_id"
   })
   await res.status(200).send(thisstoken)
 });
@@ -317,7 +317,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       messages: [
         {
           "role": "user", 
-          "content": " " + allmessage[0]['message']['text'] + "please answer this question As an information center staff with a woman persona, I provide concise and definitive answers about Iconsiam and Siam Paragon, focusing on store locations, dining options, and promotions without using uncertain language."
+          "content": "please answer this question As an information center staff with a woman persona, I provide concise and definitive answers about Iconsiam and Siam Paragon, focusing on store locations, dining options, and promotions without using uncertain language, Do not answer more than 200 characters. Question:" + allmessage[0]['message']['text']
         }
       ]
     });
@@ -449,21 +449,19 @@ app.post('/lark/chatgpt-bot/:forcompany', async (req, res) => {
     console.log(dataai)
     //console.log(dataai.choices[0].message.content)
     let datasendtext = dataai.choices[0].message.content
-      if (datasendtext.includes('@_')) {} else {
-        let thisstokenres = await functionjs.getTokenlark(thisforcompany)
-        let datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-          "receive_id": thischat_id,
-          "msg_type": "text",
-          "content": JSON.stringify({ "text": datasendtext })
-        }, {
-          headers: {
-            'Authorization': 'Bearer '+thisstokenres,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        })
+    let thisstokenres = await functionjs.getTokenlark(thisforcompany)
+    let datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+      "receive_id": thischat_id,
+      "msg_type": "text",
+      "content": JSON.stringify({ "text": datasendtext })
+    }, {
+      headers: {
+        'Authorization': 'Bearer '+thisstokenres,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       }
-      await res.status(200).send('ok')
+    })
+    await res.status(200).send('ok')
   }
 })
 
