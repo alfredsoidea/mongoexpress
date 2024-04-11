@@ -317,7 +317,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       messages: [
         {
           "role": "user", 
-          "content": "please answer this question As an information center staff with a woman persona, I provide concise and definitive answers about Iconsiam and Siam Paragon, focusing on store locations, dining options, and promotions without using uncertain language, Do not answer more than 200 characters. Question:" + allmessage[0]['message']['text']
+          "content": "Please ac like iconsiam woman staff ans answer the question in simple language and do not answer more than 200 characters. Question:" + allmessage[0]['message']['text']
         }
       ]
     });
