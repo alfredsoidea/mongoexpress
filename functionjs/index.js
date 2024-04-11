@@ -300,10 +300,17 @@ const functionjs = {
         break;
       case 'location':
         //let datasendtext = contentdata.message.text
+        let addressname = ""
+        if (contentdata.message.address) {
+          addressname = contentdata.message.address + "\n"
+        } else if (contentdata.message.title) {
+          addressname = contentdata.message.title + "\n"
+        }
+        
         datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
           "receive_id": userdata.larkchatid,
           "msg_type": "text",
-          "content": JSON.stringify({ "text": "https://www.google.com/maps?q="+contentdata.message.latitude+","+contentdata.message.longitude })
+          "content": JSON.stringify({ "text": addressname + "https://www.google.com/maps?q="+contentdata.message.latitude+","+contentdata.message.longitude })
         }, {
           headers: {
             'Authorization': 'Bearer '+thisstoken,
