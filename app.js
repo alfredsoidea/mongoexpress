@@ -428,11 +428,12 @@ app.post('/lark/chatgpt-bot/:forcompany', async (req, res) => {
     organization: 'org-IqzxlMpDHEs7QoKH634Hg1Ba'
   };
   const openai = new OpenAI(configuration);
+  console.log("open ai")
   console.log(JSON.stringify(requestbody))
   if (requestbody.type == "url_verification") {
-    //console.log({ "challenge": requestbody.challenge })
     await res.status(200).send({ "challenge": requestbody.challenge })
   } else {
+    let thisstokenres = await functionjs.getTokenlark(thisforcompany)
     let thischat_id = requestbody['event']['message']['chat_id']
     let thistextget = requestbody['event']['message']['content']
     thistextget = JSON.parse(thistextget)
@@ -442,14 +443,12 @@ app.post('/lark/chatgpt-bot/:forcompany', async (req, res) => {
       messages: [
         {
           "role": "user", 
-          "content": "Please ac like iconsiam woman staff and answer the question in simple language and do not answer more than 200 characters. Question:" + thistextget['text']
+          "content": "Please ac like iconsiam woman staff and answer the question in simple and summarize language and do not answer more than 200 characters. Question:" + thistextget['text']
         }
       ]
     });
-    console.log(dataai)
-    //console.log(dataai.choices[0].message.content)
+    console.log(dataai.choices[0].message.content)
     let datasendtext = dataai.choices[0].message.content
-    let thisstokenres = await functionjs.getTokenlark(thisforcompany)
     let datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
       "receive_id": thischat_id,
       "msg_type": "text",
