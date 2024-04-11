@@ -163,7 +163,7 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   const docSnap = await getDoc(docRef);
   let thisuserdata = await docSnap.data()
   await allmessage.forEach((currentElement, index) => {
-    if (currentElement.message.type == 'text' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image') {
+    if (currentElement.message.type == 'text' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image' || currentElement.message.type == 'location' ) {
       addDoc(collection(dbstore, "message_line_"+thisparam), {
         init_timestamp: currentElement.timestamp,
         user_id: userId,
@@ -171,7 +171,8 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
         status: "wait",
         forcompany: thisparam,
         timestamp: serverTimestamp(),
-        created_at: Date.now()
+        created_at: Date.now(),
+        messagetype: currentElement.message.type
       });
     } else {
       addDoc(collection(dbstore, "message_line_error_"+thisparam), {
@@ -181,7 +182,8 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
         status: "wait",
         forcompany: thisparam,
         timestamp: serverTimestamp(),
-        created_at: Date.now()
+        created_at: Date.now(),
+        messagetype: currentElement.message.type
       });
     }
   })
@@ -428,7 +430,7 @@ app.post('/lark/chatgpt-bot/:forcompany', async (req, res) => {
     organization: 'org-IqzxlMpDHEs7QoKH634Hg1Ba'
   };
   const openai = new OpenAI(configuration);
-  console.log("open ai")
+  //console.log("open ai")
   console.log(JSON.stringify(requestbody))
   if (requestbody.type == "url_verification") {
     await res.status(200).send({ "challenge": requestbody.challenge })
