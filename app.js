@@ -337,8 +337,6 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       thisforcompany = await functionjs.getForcompany(thisparam)
       thisstokenres = await functionjs.getTokenlark(thisforcompany)
       thisstoken = thisstokenres
-      await functionjs.query_message_by_user(thisstoken, thisforcompany , userId)
-      await res.status(200).send('ok')
     }
   } else {
     await setDoc(doc(dbstore, "userline_"+thisparam, userId), {
@@ -353,11 +351,71 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
     thisstokenres = await functionjs.getTokenlark(thisforcompany)
     thisstoken = thisstokenres
     let responsecreate = await functionjs.create_userline(thisforcompany, userId, thisstoken)
-    console.log(responsecreate)
-    let responsequery = await functionjs.query_message_by_user(thisstoken, thisforcompany , userId)
-    console.log(responsequery)
-    await res.status(200).send('ok')
+    //console.log(responsecreate)
   }
+
+  let thisaitoken = thisforcompany.thisaitoken
+  const configuration = {
+    apiKey: thisaitoken,
+    organization: 'org-IqzxlMpDHEs7QoKH634Hg1Ba'
+  };
+  const openai = new OpenAI(configuration);
+
+  let dataref = collection(dbstore, "message_line_"+thisforcompany.name)
+  const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", userId) );
+  const querySnapshot = await getDocs(q);
+  let newdatajson = []
+  await querySnapshot.forEach(async (doc) => {
+    let bodydata = doc.data()
+    bodydata.id = doc.id
+    newdatajson.push(bodydata)
+  });
+  await newdatajson.forEach(async (element) => {
+    await functionjs.send_message_by_userid(thisstoken, thisforcompany, userId, element)
+    const dataai = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          "role": "user", 
+          "content": "Please ac like iconsiam woman staff and answer the question in simple and summarize language and do not answer more than 200 characters. Question:" + element.message_data.message.text
+        }
+      ]
+    });
+
+    let thisforcompany2 = await functionjs.getForcompany(thisparam+'_gpt')
+    let thisstokenres2 = await functionjs.getTokenlark(thisforcompany2)
+
+    let datasendtext = dataai.choices[0].message.content
+    let datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+      "receive_id": thisuserdata.larkchatid,
+      "msg_type": "text",
+      "content": JSON.stringify({ "text": datasendtext })
+    }, {
+      headers: {
+        'Authorization': 'Bearer '+thisstokenres2,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    })
+
+    await axios.post('https://api.line.me/v2/bot/message/push', {
+      "to": userId,
+      "messages": [
+        {
+          "type": "text",
+          "text": datasendtext
+        }
+      ]
+    }, {
+      headers: {
+        'Authorization': 'Bearer '+thisforcompany.linetoken,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    })
+  });
+
+  await res.status(200).send('ok')
 })
 
 
