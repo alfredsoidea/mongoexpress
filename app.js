@@ -326,6 +326,11 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
 
     console.log(dataai)
     console.log(dataai.choices[0].message.content)
+    await addDoc(collection(dbstore, "message_log_"+thisparam), {
+      message_data: dataai.choices[0].message.content,
+      forcompany: thisparam,
+      timestamp: serverTimestamp(),
+    });
     await addDoc(collection(dbstore, "message_lark_"+thisparam), {
       user_id: userId,
       message_data: dataai.choices[0].message.content,
