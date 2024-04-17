@@ -71,13 +71,7 @@ const functionjs = {
     let getUserinitAdmin = await axios.get("https://larkapi.soidea.co/getuserinit/"+thisforcompany.name)
     console.log("getUserinitAdmin")
     await getUserinitAdmin.data.forEach((element) => {
-      if (userId == 'U19676ac8b7cbd97b66e4c6b3d917f049') {
-        if (element.email == 'alfred@soidea.co' || element.email == 'chate@soidea.co') {
-          thisdata.push(element.userlark_id)  
-        }
-      } else {
-        thisdata.push(element.userlark_id)
-      }
+      thisdata.push(element.userlark_id)
     });
     console.log("thisdata")
     let response = await axios.post('https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=user_id', {
