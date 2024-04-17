@@ -352,6 +352,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
     thisstoken = thisstokenres
     let responsecreate = await functionjs.create_userline_gpt(thisforcompany, userId, thisstoken)
     //console.log(responsecreate)
+    thisuserdata.larkchatid = responsecreate
   }
 
   let thisaitoken = thisforcompany.thisaitoken
@@ -370,6 +371,10 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
     bodydata.id = doc.id
     newdatajson.push(bodydata)
   });
+  let thisforcompany2 = await functionjs.getForcompany(thisparam+'_gpt')
+  let thisstokenres2 = await functionjs.getTokenlark(thisforcompany2)
+
+
   await newdatajson.forEach(async (element) => {
     await functionjs.send_message_by_userid(thisstoken, thisforcompany, userId, element)
     const dataai = await openai.chat.completions.create({
@@ -382,16 +387,9 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       ]
     });
 
-    let thisforcompany2 = await functionjs.getForcompany(thisparam+'_gpt')
-    let thisstokenres2 = await functionjs.getTokenlark(thisforcompany2)
-
-    const docRef2 = doc(dbstore, "message_line_"+thisparam, userId)
-    const docSnap2 = await getDoc(docRef2);
-    let thisuserdata2 = await docSnap2.data()
-
     let datasendtext = dataai.choices[0].message.content
     let datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-      "receive_id": thisuserdata2.larkchatid,
+      "receive_id": thisuserdata.larkchatid,
       "msg_type": "text",
       "content": JSON.stringify({ "text": datasendtext })
     }, {
