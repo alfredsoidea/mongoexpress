@@ -337,6 +337,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       thisforcompany = await functionjs.getForcompany(thisparam)
       thisstokenres = await functionjs.getTokenlark(thisforcompany)
       thisstoken = thisstokenres
+      thisuserdata = resuser
     }
   } else {
     await setDoc(doc(dbstore, "userline_"+thisparam, userId), {
