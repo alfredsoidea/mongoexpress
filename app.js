@@ -351,13 +351,8 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
     thisstokenres = await functionjs.getTokenlark(thisforcompany)
     thisstoken = thisstokenres
     let responsecreate = await functionjs.create_userline_gpt(thisforcompany, userId, thisstoken)
-    console.log("responsecreate")
-    console.log(responsecreate)
     thisuserdata = responsecreate
   }
-
-  console.log("thisuserdata")
-  console.log(thisuserdata)
 
   let thisaitoken = thisforcompany.thisaitoken
   const configuration = {

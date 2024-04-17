@@ -188,7 +188,7 @@ const functionjs = {
       })
     }
 
-    let docRef = doc(dbstore, "userline_"+thisforcompany.name, userId)
+    let docRef = await doc(dbstore, "userline_"+thisforcompany.name, userId)
     let docSnap = await getDoc(docRef);
     let thisuserdata = await docSnap.data()
     
