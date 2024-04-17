@@ -350,7 +350,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
     thisforcompany = await functionjs.getForcompany(thisparam)
     thisstokenres = await functionjs.getTokenlark(thisforcompany)
     thisstoken = thisstokenres
-    let responsecreate = await functionjs.create_userline(thisforcompany, userId, thisstoken)
+    let responsecreate = await functionjs.create_userline_gpt(thisforcompany, userId, thisstoken)
     //console.log(responsecreate)
   }
 

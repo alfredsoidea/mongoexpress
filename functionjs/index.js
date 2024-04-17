@@ -83,7 +83,7 @@ const functionjs = {
     let response = await axios.post('https://open.larksuite.com/open-apis/im/v1/chats?user_id_type=user_id', {
       "name": displayName,
       "avatar": imagekey,
-      "bot_id_list": [ thisforcompany.lark_app_api ],
+      "bot_id_list": [ thisforcompany.lark_app_api, thisforcompany.openai_app_id ],
       "user_id_list": thisdata
     }, {
       headers: {
@@ -152,9 +152,12 @@ const functionjs = {
   create_userline_gpt: async function(thisforcompany, userId, thisstoken) {
     let lark_app_api = thisforcompany.lark_app_api
     let lark_app_secret = thisforcompany.lark_app_secret
+    let openai_app_id = thisforcompany.openai_app_id
     let linetoken = thisforcompany.linetoken
     let userfromline = await functionjs.get_user_from_line(userId, linetoken)
     let userDisplayname, userDisplayImage, avatarData, avatarKey, newlarkchatid, newUserdata
+    console.log(userfromline)
+
     if (userfromline.displayName) {
       userDisplayname = await userfromline.displayName
     } else {
@@ -174,6 +177,7 @@ const functionjs = {
         pictureurl: userDisplayImage
       });
     });
+
     if (userDisplayImage == "none") {
       newlarkchatid = await functionjs.create_larkchat_gpt(thisforcompany, userDisplayname , "none", thisstoken, userId)
       newUserdata = await runTransaction(dbstore, async (transaction) => {
@@ -191,6 +195,7 @@ const functionjs = {
         })
       })
     }
+    
     return newlarkchatid
   },
   create_userline: async function(thisforcompany, userId, thisstoken) {
