@@ -69,7 +69,6 @@ const functionjs = {
   create_larkchat_gpt: async function (thisforcompany, displayName, imagekey, thisstoken, userId) {
     let thisdata = []
     let getUserinitAdmin = await axios.get("https://larkapi.soidea.co/getuserinit/"+thisforcompany.name)
-    console.log("getUserinitAdmin")
     await getUserinitAdmin.data.forEach((element) => {
       thisdata.push(element.userlark_id)
     });
@@ -146,7 +145,6 @@ const functionjs = {
   create_userline_gpt: async function(thisforcompany, userId, thisstoken) {
     let lark_app_api = thisforcompany.lark_app_api
     let lark_app_secret = thisforcompany.lark_app_secret
-    let openai_app_id = thisforcompany.openai_app_id
     let linetoken = thisforcompany.linetoken
     let userfromline = await functionjs.get_user_from_line(userId, linetoken)
     let userDisplayname, userDisplayImage, avatarData, avatarKey, newlarkchatid, newUserdata
