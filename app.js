@@ -300,8 +300,8 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   let allmessage = requestbody['events']
   let userId = allmessage[0]['source']['userId']
   let thisstoken
-  const docRef = doc(dbstore, "userline_"+thisparam, userId)
-  const docSnap = await getDoc(docRef);
+  let docRef = doc(dbstore, "userline_"+thisparam, userId)
+  let docSnap = await getDoc(docRef);
   let thisuserdata = await docSnap.data()
   await allmessage.forEach((currentElement, index) => {
     if (currentElement.message.type == 'text' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image' || currentElement.message.type == 'location' ) {
@@ -337,7 +337,6 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
       thisforcompany = await functionjs.getForcompany(thisparam)
       thisstokenres = await functionjs.getTokenlark(thisforcompany)
       thisstoken = thisstokenres
-      thisuserdata = resuser
     }
   } else {
     await setDoc(doc(dbstore, "userline_"+thisparam, userId), {
@@ -352,9 +351,13 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
     thisstokenres = await functionjs.getTokenlark(thisforcompany)
     thisstoken = thisstokenres
     let responsecreate = await functionjs.create_userline_gpt(thisforcompany, userId, thisstoken)
-    //console.log(responsecreate)
-    thisuserdata.larkchatid = responsecreate
+    console.log("responsecreate")
+    console.log(responsecreate)
+    thisuserdata = responsecreate
   }
+
+  console.log("thisuserdata")
+  console.log(thisuserdata)
 
   let thisaitoken = thisforcompany.thisaitoken
   const configuration = {
