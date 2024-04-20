@@ -164,7 +164,6 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   let thisuserdata = await docSnap.data()
   await allmessage.forEach((currentElement, index) => {
     if (currentElement.message.type == 'text' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image' || currentElement.message.type == 'location' ) {
-
       addDoc(collection(dbstore, "message_line_"+thisparam), {
         init_timestamp: currentElement.timestamp,
         user_id: userId,
@@ -233,27 +232,15 @@ app.post('/lark/webhook/:forcompany', async (req, res) => {
     let messageraw = requestbody['event']
     let thislarkchatid = messageraw.message.chat_id
     let resuser = await functionjs.get_userline_data_larkchat(thisforcompany, thislarkchatid)
-    if (messageraw.message.message_type == 'text' && JSON.parse(messageraw.message.content).text.includes('@_')) {
-      await addDoc(collection(dbstore, "message_lark_"+thisparam), {
-        init_timestamp: requestbody['event'].message.create_time,
-        user_id: resuser.user_id,
-        message_data: messageraw.message,
-        status: "stop",
-        forcompany: thisparam,
-        timestamp: serverTimestamp(),
-        created_at: Date.now()
-      });
-    } else {
-      await addDoc(collection(dbstore, "message_lark_"+thisparam), {
-        init_timestamp: requestbody['event'].message.create_time,
-        user_id: resuser.user_id,
-        message_data: messageraw.message,
-        status: "wait",
-        forcompany: thisparam,
-        timestamp: serverTimestamp(),
-        created_at: Date.now()
-      });
-    }
+    await addDoc(collection(dbstore, "message_lark_"+thisparam), {
+      init_timestamp: requestbody['event'].message.create_time,
+      user_id: resuser.user_id,
+      message_data: messageraw.message,
+      status: "wait",
+      forcompany: thisparam,
+      timestamp: serverTimestamp(),
+      created_at: Date.now()
+    });
     let thisstoken = await functionjs.getTokenlark(thisforcompany)
     let querymess = await functionjs.query_message_by_larkchat(thisstoken, thisforcompany, resuser)
     await res.status(200).send("ok")
