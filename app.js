@@ -508,7 +508,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
 
   console.log(thisThread);
   const run = await openai.beta.threads.runs.retrieve(
-    thisThread.,
+    thisThread.thread_id,
     thisThread.id
   );
 
