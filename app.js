@@ -176,37 +176,19 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   const docRef = doc(dbstore, "userline_"+thisparam, userId)
   const docSnap = await getDoc(docRef);
   let thisuserdata = await docSnap.data()
-  let datasendtextinner = ""
   await allmessage.forEach((currentElement, index) => {
     if (currentElement.message.type == 'text' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image' || currentElement.message.type == 'location' ) {
-      if (currentElement.message.type == 'text') {
-        datasendtextinner = currentElement.message.text
-        if (datasendtext.includes('@_')) { 
-            // ... do nothing
-        } else {
-          addDoc(collection(dbstore, "message_line_"+thisparam), {
-            init_timestamp: currentElement.timestamp,
-            user_id: userId,
-            message_data: currentElement,
-            status: "wait",
-            forcompany: thisparam,
-            timestamp: serverTimestamp(),
-            created_at: Date.now(),
-            messagetype: currentElement.message.type
-          });
-        }
-      } else {
-        addDoc(collection(dbstore, "message_line_"+thisparam), {
-          init_timestamp: currentElement.timestamp,
-          user_id: userId,
-          message_data: currentElement,
-          status: "wait",
-          forcompany: thisparam,
-          timestamp: serverTimestamp(),
-          created_at: Date.now(),
-          messagetype: currentElement.message.type
-        });
-      }
+
+      addDoc(collection(dbstore, "message_line_"+thisparam), {
+        init_timestamp: currentElement.timestamp,
+        user_id: userId,
+        message_data: currentElement,
+        status: "wait",
+        forcompany: thisparam,
+        timestamp: serverTimestamp(),
+        created_at: Date.now(),
+        messagetype: currentElement.message.type
+      });
     } else {
       addDoc(collection(dbstore, "message_line_error_"+thisparam), {
         init_timestamp: currentElement.timestamp,
@@ -526,7 +508,7 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
 
   console.log(thisThread);
   const run = await openai.beta.threads.runs.retrieve(
-    thisThread.thread_id,
+    thisThread.,
     thisThread.id
   );
 
