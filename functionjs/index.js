@@ -532,6 +532,7 @@ const functionjs = {
       newdatajson.push(bodydata)
     });
     await newdatajson.forEach(async (element) => {
+      await functionjs.set_larkmessage_status(element.id, thisforcompany, 'process')
       await functionjs.send_message_from_lark(thisstoken, thisforcompany, userId, element)
     });
   },
@@ -543,7 +544,6 @@ const functionjs = {
     let datasendtext, datareturn
     let datamessagekey = datamessage.id
     let imageresponse, videoresponse, fileresponse
-    await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'process')
     let thismessagetype = datamessage.message_data.message_type
     switch(thismessagetype) {
       case 'text':

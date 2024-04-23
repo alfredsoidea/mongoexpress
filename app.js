@@ -262,6 +262,8 @@ app.post('/lark/webhook/:forcompany', async (req, res) => {
           timestamp: serverTimestamp(),
           created_at: Date.now()
         });
+        let thisstoken = await functionjs.getTokenlark(thisforcompany)
+        let querymess = await functionjs.query_message_by_larkchat(thisstoken, thisforcompany, resuser)
       }
     } else {
       await addDoc(collection(dbstore, "message_lark_"+thisparam), {
@@ -273,9 +275,9 @@ app.post('/lark/webhook/:forcompany', async (req, res) => {
         timestamp: serverTimestamp(),
         created_at: Date.now()
       });
+      let thisstoken = await functionjs.getTokenlark(thisforcompany)
+      let querymess = await functionjs.query_message_by_larkchat(thisstoken, thisforcompany, resuser)
     }
-    let thisstoken = await functionjs.getTokenlark(thisforcompany)
-    let querymess = await functionjs.query_message_by_larkchat(thisstoken, thisforcompany, resuser)
     await res.status(200).send("ok")
   }
 })
