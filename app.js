@@ -87,6 +87,20 @@ app.post('/forcemessage/line/webhook/:forcompany/:recordid', async (req, res) =>
   await res.status(200).send('ok')
 });
 
+app.post('/forcemessage_fixroom/line/webhook/:forcompany/:recordid', async (req, res) => {
+  let thisparam = req.params.forcompany
+  let recordid = req.params.recordid
+  const docRef = doc(dbstore, "userline_"+thisparam, recordid)
+  const docSnap = await getDoc(docRef);
+  let thisuserdata = await docSnap.data()
+  thisuserdata.id = recordid
+  let thisforcompany = await functionjs.getForcompany(thisparam)
+  let thisstokenres = await functionjs.getTokenlark(thisforcompany)
+  let responsecreate = await functionjs.create_userline(thisforcompany, recordid, thisstokenres)
+  let responsequery = await functionjs.query_message_by_user(thisstokenres, thisforcompany ,recordid)
+  await res.status(200).send('ok')
+});
+
 
 app.get('/mockuproom/:forcompany/:roomid', async (req, res) => {
   let thisroomid = req.params.roomid
@@ -162,18 +176,37 @@ app.post('/line/webhook/:forcompany', async (req, res) => {
   const docRef = doc(dbstore, "userline_"+thisparam, userId)
   const docSnap = await getDoc(docRef);
   let thisuserdata = await docSnap.data()
+  let datasendtextinner = ""
   await allmessage.forEach((currentElement, index) => {
     if (currentElement.message.type == 'text' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image' || currentElement.message.type == 'location' ) {
-      addDoc(collection(dbstore, "message_line_"+thisparam), {
-        init_timestamp: currentElement.timestamp,
-        user_id: userId,
-        message_data: currentElement,
-        status: "wait",
-        forcompany: thisparam,
-        timestamp: serverTimestamp(),
-        created_at: Date.now(),
-        messagetype: currentElement.message.type
-      });
+      if (currentElement.message.type == 'text') {
+        datasendtextinner = currentElement.message.text
+        if (datasendtext.includes('@_')) { 
+            // ... do nothing
+        } else {
+          addDoc(collection(dbstore, "message_line_"+thisparam), {
+            init_timestamp: currentElement.timestamp,
+            user_id: userId,
+            message_data: currentElement,
+            status: "wait",
+            forcompany: thisparam,
+            timestamp: serverTimestamp(),
+            created_at: Date.now(),
+            messagetype: currentElement.message.type
+          });
+        }
+      } else {
+        addDoc(collection(dbstore, "message_line_"+thisparam), {
+          init_timestamp: currentElement.timestamp,
+          user_id: userId,
+          message_data: currentElement,
+          status: "wait",
+          forcompany: thisparam,
+          timestamp: serverTimestamp(),
+          created_at: Date.now(),
+          messagetype: currentElement.message.type
+        });
+      }
     } else {
       addDoc(collection(dbstore, "message_line_error_"+thisparam), {
         init_timestamp: currentElement.timestamp,
@@ -232,15 +265,27 @@ app.post('/lark/webhook/:forcompany', async (req, res) => {
     let messageraw = requestbody['event']
     let thislarkchatid = messageraw.message.chat_id
     let resuser = await functionjs.get_userline_data_larkchat(thisforcompany, thislarkchatid)
-    await addDoc(collection(dbstore, "message_lark_"+thisparam), {
-      init_timestamp: requestbody['event'].message.create_time,
-      user_id: resuser.user_id,
-      message_data: messageraw.message,
-      status: "wait",
-      forcompany: thisparam,
-      timestamp: serverTimestamp(),
-      created_at: Date.now()
-    });
+    if (messageraw.message.message_type == 'text' && JSON.parse(messageraw.message.content).text.includes('@_')) {
+      // await addDoc(collection(dbstore, "message_lark_"+thisparam), {
+      //   init_timestamp: requestbody['event'].message.create_time,
+      //   user_id: resuser.user_id,
+      //   message_data: messageraw.message,
+      //   status: "stop",
+      //   forcompany: thisparam,
+      //   timestamp: serverTimestamp(),
+      //   created_at: Date.now()
+      // });
+    } else {
+      await addDoc(collection(dbstore, "message_lark_"+thisparam), {
+        init_timestamp: requestbody['event'].message.create_time,
+        user_id: resuser.user_id,
+        message_data: messageraw.message,
+        status: "wait",
+        forcompany: thisparam,
+        timestamp: serverTimestamp(),
+        created_at: Date.now()
+      });
+    }
     let thisstoken = await functionjs.getTokenlark(thisforcompany)
     let querymess = await functionjs.query_message_by_larkchat(thisstoken, thisforcompany, resuser)
     await res.status(200).send("ok")
@@ -263,7 +308,6 @@ app.post('/lark/groupchat/:forcompany', async (req, res) => {
   })
   await res.status(200).send("ok")
 })
-
 
 app.post('/line-checkdata/:forcompany', async (req, res) => {
   let thisparam = req.params.forcompany
@@ -292,13 +336,58 @@ app.get('/larktoken/:forcompany', async (req, res) => {
   await res.status(200).send(thisstokenres)
 })
 
-
-
-
 async function getjsondataadd() {
   let jsondata1 = await readJsonFile('kwc.json');
   return jsondata1
 }
+
+app.post('/upload_firebase', multer({limits: { fieldSize: 30 * 1024 * 1024 }}).single('file') , async (req, res) => {
+  console.log(req.filedata)
+  console.log("req.file end")
+  let file = req.body.filedata
+  const metadata = {
+    contentType: 'image/jpeg'
+  };
+  const storageRef = await ref(storage, 'images/' + functionjs.makeid(30) + "-image");
+
+  const uploadTask = uploadBytes(storageRef, file).then((snapshot) => {
+    //console.log(snapshot)
+  });
+  // uploadTask.on('state_changed', (snapshot) => {
+  //     console.log(snapshot)
+  //     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+  //     console.log('Upload is ' + progress + '% done');
+  //     switch (snapshot.state) {
+  //       case 'paused':
+  //         console.log('Upload is paused');
+  //         break;
+  //       case 'running':
+  //         console.log('Upload is running');
+  //         break;
+  //     }
+  //   }, 
+  //   (error) => {
+  //     switch (error.code) {
+  //       case 'storage/unauthorized':
+  //         break;
+  //       case 'storage/canceled':
+  //         break;
+  //       case 'storage/unknown':
+  //         break;
+  //     }
+  //   }, () => {
+  //     getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+  //       res.status(200).send(downloadURL)
+  //     });
+  //   }
+  // );
+})
+
+const port = process.env.PORT || 8000;
+
+app.listen(port, () => {
+  console.log(`Listening: http://localhost:${port}`);
+});
 
 app.post('/line/chatgpt/:forcompany', async (req, res) => {
   let resuser,thisforcompany,thisstokenres
@@ -363,6 +452,8 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
   }
 
   let thisaitoken = thisforcompany.thisaitoken
+  let thisassistant_id = thisforcompany.assistant_id
+
   const configuration = {
     apiKey: thisaitoken,
     organization: 'org-IqzxlMpDHEs7QoKH634Hg1Ba'
@@ -424,57 +515,24 @@ app.post('/line/chatgpt/:forcompany', async (req, res) => {
     })
   });
 
+  const thisThread = await openai.beta.threads.createAndRun({
+    assistant_id: thisassistant_id,
+    thread: {
+      messages: [
+        { role: "user", content: "Explain deep learning to a 5 year old." },
+      ],
+    },
+  })
+
+  console.log(thisThread);
+  const run = await openai.beta.threads.runs.retrieve(
+    thisThread.thread_id,
+    thisThread.id
+  );
+
+  console.log(run);
   await res.status(200).send('ok')
 })
-
-
-app.post('/upload_firebase', multer({limits: { fieldSize: 30 * 1024 * 1024 }}).single('file') , async (req, res) => {
-  console.log(req.filedata)
-  console.log("req.file end")
-  let file = req.body.filedata
-  const metadata = {
-    contentType: 'image/jpeg'
-  };
-  const storageRef = await ref(storage, 'images/' + functionjs.makeid(30) + "-image");
-
-  const uploadTask = uploadBytes(storageRef, file).then((snapshot) => {
-    //console.log(snapshot)
-  });
-  // uploadTask.on('state_changed', (snapshot) => {
-  //     console.log(snapshot)
-  //     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-  //     console.log('Upload is ' + progress + '% done');
-  //     switch (snapshot.state) {
-  //       case 'paused':
-  //         console.log('Upload is paused');
-  //         break;
-  //       case 'running':
-  //         console.log('Upload is running');
-  //         break;
-  //     }
-  //   }, 
-  //   (error) => {
-  //     switch (error.code) {
-  //       case 'storage/unauthorized':
-  //         break;
-  //       case 'storage/canceled':
-  //         break;
-  //       case 'storage/unknown':
-  //         break;
-  //     }
-  //   }, () => {
-  //     getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-  //       res.status(200).send(downloadURL)
-  //     });
-  //   }
-  // );
-})
-
-const port = process.env.PORT || 8000;
-
-app.listen(port, () => {
-  console.log(`Listening: http://localhost:${port}`);
-});
 
 app.post('/lark/chatgpt-bot/:forcompany', async (req, res) => {
   let thisparam = req.params.forcompany

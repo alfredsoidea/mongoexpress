@@ -281,7 +281,7 @@ const functionjs = {
     let userdataget = await getDoc(userdataref);
     let userdata = await userdataget.data()
 
-    await functionjs.set_message_status(datamessagekey, thisforcompany, 'process')
+    //await functionjs.set_message_status(datamessagekey, thisforcompany, 'process')
 
     switch(thismessagetype) {
       case 'text':
@@ -739,6 +739,7 @@ const functionjs = {
       let bodydata = doc.data()
       bodydata.id = doc.id
       newdatajson.push(bodydata)
+      await functionjs.set_message_status(doc.id, thisforcompany, 'process')
     });
 
     // newdatajson.sort(functionjs.compareBytime);
@@ -760,6 +761,7 @@ const functionjs = {
       let bodydata = doc.data()
       bodydata.id = doc.id
       newdatajson.push(bodydata)
+      await functionjs.set_message_status(doc.id, thisforcompany, 'process')
     });
     await newdatajson.forEach(async (element) => {
       await functionjs.send_message_by_userid(thisstoken, thisforcompany, userId, element)
