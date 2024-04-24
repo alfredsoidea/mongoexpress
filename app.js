@@ -259,16 +259,26 @@ app.post('/lark/webhook/:forcompany', async (req, res) => {
         //   created_at: Date.now()
         // });
       } else {
-        await addDoc(collection(dbstore, "message_lark_"+thisparam), {
-          init_timestamp: requestbody['event'].message.create_time,
-          user_id: resuser.user_id,
-          message_data: messageraw.message,
-          message_id: messageraw.message.message_id,
-          status: "wait",
-          forcompany: thisparam,
-          timestamp: serverTimestamp(),
-          created_at: Date.now()
-        });
+          let innercheck = false
+          let dataref2 = collection(dbstore, "message_lark_"+thisparam)
+          const q2 = query(dataref2, where("message_id", "==", messageraw.message.message_id));
+          const querySnapshot2 = await getDocs(q2);
+          await querySnapshot2.forEach(async (doc) => {
+            innercheck = true
+          });
+          console.log(innercheck)
+          if (innercheck == false) {
+            await addDoc(collection(dbstore, "message_lark_"+thisparam), {
+              init_timestamp: requestbody['event'].message.create_time,
+              user_id: resuser.user_id,
+              message_data: messageraw.message,
+              message_id: messageraw.message.message_id,
+              status: "wait",
+              forcompany: thisparam,
+              timestamp: serverTimestamp(),
+              created_at: Date.now()
+            });
+          }
       }
       let thisstoken = await functionjs.getTokenlark(thisforcompany)
       let querymess = await functionjs.query_message_by_larkchat(thisstoken, thisforcompany, resuser)
