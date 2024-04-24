@@ -263,6 +263,7 @@ app.post('/lark/webhook/:forcompany', async (req, res) => {
           init_timestamp: requestbody['event'].message.create_time,
           user_id: resuser.user_id,
           message_data: messageraw.message,
+          message_id: messageraw.message.message_id,
           status: "wait",
           forcompany: thisparam,
           timestamp: serverTimestamp(),
