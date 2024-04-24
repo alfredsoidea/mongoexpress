@@ -188,11 +188,11 @@ const functionjs = {
       })
     }
 
-    let docRef = doc(dbstore, "userline_"+thisparam, userId)
+    let docRef = await doc(dbstore, "userline_"+thisforcompany.name, userId)
     let docSnap = await getDoc(docRef);
     let thisuserdata = await docSnap.data()
     
-    return newUserdata
+    return thisuserdata
   },
   create_userline: async function(thisforcompany, userId, thisstoken) {
     console.log("functionjscreate_userline")
