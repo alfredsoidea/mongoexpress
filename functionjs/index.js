@@ -188,11 +188,11 @@ const functionjs = {
       })
     }
 
-    let docRef = await doc(dbstore, "userline_"+thisforcompany.name, userId)
+    let docRef = doc(dbstore, "userline_"+thisparam, userId)
     let docSnap = await getDoc(docRef);
     let thisuserdata = await docSnap.data()
     
-    return thisuserdata
+    return newUserdata
   },
   create_userline: async function(thisforcompany, userId, thisstoken) {
     console.log("functionjscreate_userline")
@@ -530,7 +530,6 @@ const functionjs = {
       let bodydata = doc.data()
       bodydata.id = doc.id
       newdatajson.push(bodydata)
-      await functionjs.set_larkmessage_status(doc.id, thisforcompany, 'process')
     });
     await newdatajson.forEach(async (element) => {
       await functionjs.send_message_from_lark(thisstoken, thisforcompany, userId, element)
@@ -544,6 +543,7 @@ const functionjs = {
     let datasendtext, datareturn
     let datamessagekey = datamessage.id
     let imageresponse, videoresponse, fileresponse
+    await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'process')
     let thismessagetype = datamessage.message_data.message_type
     switch(thismessagetype) {
       case 'text':
