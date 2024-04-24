@@ -530,9 +530,9 @@ const functionjs = {
       let bodydata = doc.data()
       bodydata.id = doc.id
       newdatajson.push(bodydata)
+      await functionjs.set_larkmessage_status(doc.id, thisforcompany, 'process')
     });
     await newdatajson.forEach(async (element) => {
-      await functionjs.set_larkmessage_status(element.id, thisforcompany, 'process')
       await functionjs.send_message_from_lark(thisstoken, thisforcompany, userId, element)
     });
   },
