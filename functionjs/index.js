@@ -358,7 +358,7 @@ const functionjs = {
           }
         })
         console.log("dataresultsentaudio")
-        console.log(dataresultsentaudio)
+        //console.log(dataresultsentaudio)
         //sending audio message
         datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
           "receive_id": userdata.larkchatid,
@@ -542,6 +542,7 @@ const functionjs = {
     let userdata = await userdataget.data()
     let datasendtext, datareturn
     let datamessagekey = datamessage.id
+    console.log(datamessagekey)
     let imageresponse, videoresponse, fileresponse
     await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'process')
     let thismessagetype = datamessage.message_data.message_type
@@ -565,19 +566,26 @@ const functionjs = {
             }
           })
         }
-        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
       case 'post':
         datasendtext = JSON.parse(datamessage.message_data.content)
+        console.log(datasendtext.content)
         let postnewtext = ""
+        let checktag = false
         postnewtext = postnewtext + datasendtext.title + "\n"
         datasendtext.content.forEach((element) => {
           element.forEach((elementinner) => {
+            if (elementinner.tag == "at") {
+              checktag = true
+            }
             postnewtext = postnewtext + elementinner.text + "\n"
           })
         });
         console.log(postnewtext)
-        if (postnewtext.includes('@_')) {} else {
+        // console.log("checktag")
+        // console.log(checktag)
+        if (checktag == false) {
           datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
             "to": userId,
             "messages": [
@@ -594,7 +602,7 @@ const functionjs = {
             }
           })
         }
-        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
       case 'image':
         datasendtext = datamessage.message_data
@@ -636,7 +644,7 @@ const functionjs = {
             'Accept': 'application/json'
           }
         })
-        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
       case 'media':
         datasendtext = datamessage.message_data
@@ -699,7 +707,7 @@ const functionjs = {
             'Accept': 'application/json'
           }
         })
-        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
       case 'file':
         datasendtext = datamessage.message_data
@@ -726,7 +734,7 @@ const functionjs = {
         }, {
           headers: {}
         })
-        //await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
     }
   },
