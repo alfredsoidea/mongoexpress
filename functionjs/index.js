@@ -44,9 +44,6 @@ const app = express();
 
 
 const functionjs = {
-  sayHello: function() {
-    return 'Hello!';
-  },
   get_userline_data: async function (thisforcompany, userId) {
     const docRef = await doc(dbstore, "userline_"+thisforcompany, userId)
     const docSnap = await getDoc(docRef);
