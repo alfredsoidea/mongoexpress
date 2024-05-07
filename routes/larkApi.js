@@ -4,7 +4,6 @@ import helmet from 'helmet';
 import multer from 'multer';
 import request from 'request';
 import axios from 'axios';
-import OpenAI from 'openai';
 
 import { initializeApp } from "firebase/app";
 const firebaseConfig = {
@@ -40,6 +39,84 @@ const dbstore = getFirestore();
 import functionjs from "../functionjs/index.js";
 
 const larkApi = (app) => {
+
+  app.post('/lark/webhook/:forcompany', async (req, res) => {
+    let thisforcompany,thisstokenres
+    let thisparam = req.params.forcompany
+    let requestbody = req.body
+    thisforcompany = await functionjs.getForcompany(thisparam)
+    console.log(JSON.stringify(req.body))
+    console.log(req.body)
+    console.log("req.body")
+    if (requestbody.type == "url_verification") {
+      console.log({ "challenge": requestbody.challenge })
+      await res.status(200).send({ "challenge": requestbody.challenge })
+    } else {
+      let messageraw = requestbody['event']
+      let thislarkchatid = messageraw.message.chat_id
+      let resuser = await functionjs.get_userline_data_larkchat(thisforcompany, thislarkchatid)
+      if (messageraw.message.message_type == 'text' || messageraw.message.message_type == 'post' || messageraw.message.message_type == 'image' || messageraw.message.message_type == 'media'|| messageraw.message.message_type == 'file') {
+        if (messageraw.message.message_type == 'text' && JSON.parse(messageraw.message.content).text.includes('@_')) {
+          // await addDoc(collection(dbstore, "message_lark_"+thisparam), {
+          //   init_timestamp: requestbody['event'].message.create_time,
+          //   user_id: resuser.user_id,
+          //   message_data: messageraw.message,
+          //   status: "stop",
+          //   forcompany: thisparam,
+          //   timestamp: serverTimestamp(),
+          //   created_at: Date.now()
+          // });
+        } else {
+            let innercheck = false
+            if (messageraw.message.status == "tester") {
+              innercheck = false
+            } else {
+              let dataref2 = collection(dbstore, "message_lark_"+thisparam)
+              const q2 = query(dataref2, where("message_id", "==", messageraw.message.message_id));
+              const querySnapshot2 = await getDocs(q2);
+              await querySnapshot2.forEach(async (doc) => {
+                innercheck = true
+              });
+            }
+            console.log(innercheck)
+            if (innercheck == false) {
+              console.log("req.body2")
+              await addDoc(collection(dbstore, "message_lark_"+thisparam), {
+                init_timestamp: requestbody['event'].message.create_time,
+                user_id: resuser.user_id,
+                message_data: messageraw.message,
+                message_id: messageraw.message.message_id,
+                status: "wait",
+                forcompany: thisparam,
+                timestamp: serverTimestamp(),
+                created_at: Date.now()
+              });
+            }
+        }
+        let thisstoken = await functionjs.getTokenlark(thisforcompany)
+        let querymess = await functionjs.query_message_by_larkchat(thisstoken, thisforcompany, resuser)
+      }
+      await res.status(200).send("ok")
+    }
+  })
+
+  // app.post('/lark/groupchat/:forcompany', async (req, res) => {
+  //   let thisforcompany,thisstokenres
+  //   let thisparam = req.params.forcompany
+  //   thisforcompany = await functionjs.getForcompany(thisparam)
+  //   thisstokenres = await functionjs.getTokenlark(thisforcompany)
+  //   axios.request({
+  //     headers: {
+  //       Authorization: `Bearer ${thisstokenres}`,
+  //       'Content-Type': "application/json; charset=utf-8",
+  //     },
+  //     method: "DELETE",
+  //     url: 'https://open.larksuite.com/open-apis/im/v1/chats/oc_c356a428a47424c9a3a4de63cbba4697/members?member_id_type=user_id',
+  //     data: {"id_list": ["d9cdg11a","6dae7g89","7fbdbba2","22d2d869","64b6ffa4","bf6a1c16","19ed8f51","8317b15e","faa997a2","9gdc9a6c","54eg842f","b5459dc6","db2dgba3","gb5f4833","b4gfa3d5","c8252377","f5b74daa","6dbg4e65","fd8gef52","85612fc1","46398ccb","e7g76dg8"]}
+  //   })
+  //   await res.status(200).send("ok")
+  // })
+
   app.post('/lark-sendpdf', async (req, res) => {
     let requestbody = req.body
     console.log(JSON.stringify(requestbody))
@@ -81,77 +158,6 @@ const larkApi = (app) => {
     })
     await functionjs.set_message_status(requestbody.datamessagekey, { 'name': requestbody.forcompany }, 'sent')
     await res.status(200).send('ok')
-  })
-
-  app.post('/lark/webhook/:forcompany', async (req, res) => {
-    let thisforcompany,thisstokenres
-    let thisparam = req.params.forcompany
-    let requestbody = req.body
-    thisforcompany = await functionjs.getForcompany(thisparam)
-    console.log(JSON.stringify(req.body))
-    console.log(req.body)
-    if (requestbody.type == "url_verification") {
-      console.log({ "challenge": requestbody.challenge })
-      await res.status(200).send({ "challenge": requestbody.challenge })
-    } else {
-      let messageraw = requestbody['event']
-      let thislarkchatid = messageraw.message.chat_id
-      let resuser = await functionjs.get_userline_data_larkchat(thisforcompany, thislarkchatid)
-      if (messageraw.message.message_type == 'text' || messageraw.message.message_type == 'post' || messageraw.message.message_type == 'image' || messageraw.message.message_type == 'media'|| messageraw.message.message_type == 'file') {
-        if (messageraw.message.message_type == 'text' && JSON.parse(messageraw.message.content).text.includes('@_')) {
-          // await addDoc(collection(dbstore, "message_lark_"+thisparam), {
-          //   init_timestamp: requestbody['event'].message.create_time,
-          //   user_id: resuser.user_id,
-          //   message_data: messageraw.message,
-          //   status: "stop",
-          //   forcompany: thisparam,
-          //   timestamp: serverTimestamp(),
-          //   created_at: Date.now()
-          // });
-        } else {
-            let innercheck = false
-            let dataref2 = collection(dbstore, "message_lark_"+thisparam)
-            const q2 = query(dataref2, where("message_id", "==", messageraw.message.message_id));
-            const querySnapshot2 = await getDocs(q2);
-            await querySnapshot2.forEach(async (doc) => {
-              innercheck = true
-            });
-            console.log(innercheck)
-            if (innercheck == false) {
-              await addDoc(collection(dbstore, "message_lark_"+thisparam), {
-                init_timestamp: requestbody['event'].message.create_time,
-                user_id: resuser.user_id,
-                message_data: messageraw.message,
-                message_id: messageraw.message.message_id,
-                status: "wait",
-                forcompany: thisparam,
-                timestamp: serverTimestamp(),
-                created_at: Date.now()
-              });
-            }
-        }
-        let thisstoken = await functionjs.getTokenlark(thisforcompany)
-        let querymess = await functionjs.query_message_by_larkchat(thisstoken, thisforcompany, resuser)
-      }
-      await res.status(200).send("ok")
-    }
-  })
-
-  app.post('/lark/groupchat/:forcompany', async (req, res) => {
-    let thisforcompany,thisstokenres
-    let thisparam = req.params.forcompany
-    thisforcompany = await functionjs.getForcompany(thisparam)
-    thisstokenres = await functionjs.getTokenlark(thisforcompany)
-    axios.request({
-      headers: {
-        Authorization: `Bearer ${thisstokenres}`,
-        'Content-Type': "application/json; charset=utf-8",
-      },
-      method: "DELETE",
-      url: 'https://open.larksuite.com/open-apis/im/v1/chats/oc_c356a428a47424c9a3a4de63cbba4697/members?member_id_type=user_id',
-      data: {"id_list": ["d9cdg11a","6dae7g89","7fbdbba2","22d2d869","64b6ffa4","bf6a1c16","19ed8f51","8317b15e","faa997a2","9gdc9a6c","54eg842f","b5459dc6","db2dgba3","gb5f4833","b4gfa3d5","c8252377","f5b74daa","6dbg4e65","fd8gef52","85612fc1","46398ccb","e7g76dg8"]}
-    })
-    await res.status(200).send("ok")
   })
 
   app.get('/larktoken/:forcompany', async (req, res) => {

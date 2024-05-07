@@ -707,6 +707,7 @@ const functionjs = {
         await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
       case 'file':
+        console.log('this file')
         datasendtext = datamessage.message_data
         let mediaUrlFile2 = 'https://open.larksuite.com/open-apis/im/v1/messages/'+datasendtext.message_id+'/resources/'+JSON.parse(datasendtext.content).file_key+'?type=file';
         let mediaUrlFile2Res = await axios.request({

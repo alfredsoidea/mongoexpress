@@ -10,7 +10,6 @@ import path from 'path';
 import cors from 'cors';
 const app = express();
 
-
 app.use(morgan('dev'));
 app.use(helmet());
 app.use(cors());
@@ -23,8 +22,11 @@ import { lineCommand } from './routes/lineCommand.js';
 import { chatGpt } from './routes/chatGpt.js';
 
 lineApi(app);
+
 larkApi(app);
+
 lineCommand(app);
+
 chatGpt(app);
 
 const port = process.env.PORT || 8000;

@@ -108,6 +108,75 @@ const lineApi = (app) => {
       }
     })
 
+    app.post('/line/webhook/groupchat/:forcompany', async (req, res) => {
+      let resuser,thisforcompany,thisstokenres
+      let thisparam = req.params.forcompany
+      let requestbody = req.body
+      console.log(thisparam)
+      console.log(requestbody)
+      console.log(JSON.stringify(req.body))
+      let allmessage = requestbody['events']
+      let userId = allmessage[0]['source']['userId']
+      let thisstoken
+      const docRef = doc(dbstore, "userline_"+thisparam, userId)
+      const docSnap = await getDoc(docRef);
+      let thisuserdata = await docSnap.data()
+      await allmessage.forEach((currentElement, index) => {
+        if (currentElement.message.type == 'text' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image' || currentElement.message.type == 'location' ) {
+          addDoc(collection(dbstore, "message_line_"+thisparam), {
+            init_timestamp: currentElement.timestamp,
+            user_id: userId,
+            message_data: currentElement,
+            status: "wait",
+            forcompany: thisparam,
+            timestamp: serverTimestamp(),
+            created_at: Date.now(),
+            messagetype: currentElement.message.type
+          });
+        } else {
+          addDoc(collection(dbstore, "message_line_error_"+thisparam), {
+            init_timestamp: currentElement.timestamp,
+            user_id: userId,
+            message_data: currentElement,
+            status: "wait",
+            forcompany: thisparam,
+            timestamp: serverTimestamp(),
+            created_at: Date.now(),
+            messagetype: currentElement.message.type
+          });
+        }
+      })
+      if (docSnap.exists()) {
+        if (thisuserdata.larkchatid == "pre") {
+          await res.status(200).send('ok')
+        } else {
+          resuser = await functionjs.get_userline_data(thisforcompany, userId, thisstoken)
+          thisforcompany = await functionjs.getForcompany(thisparam)
+          thisstokenres = await functionjs.getTokenlark(thisforcompany)
+          thisstoken = thisstokenres
+          await functionjs.query_message_by_user(thisstoken, thisforcompany , userId)
+          await res.status(200).send('ok')
+        }
+      } else {
+        await setDoc(doc(dbstore, "userline_"+thisparam, userId), {
+          forcompany: thisparam,
+          timestamp: serverTimestamp(),
+          displayname: "pre",
+          larkchatid: "pre",
+          pictureurl: "pre",
+          user_id: userId
+        });
+        thisforcompany = await functionjs.getForcompany(thisparam)
+        thisstokenres = await functionjs.getTokenlark(thisforcompany)
+        thisstoken = thisstokenres
+        let responsecreate = await functionjs.create_userline(thisforcompany, userId, thisstoken)
+        console.log(responsecreate)
+        let responsequery = await functionjs.query_message_by_user(thisstoken, thisforcompany , userId)
+        console.log(responsequery)
+        await res.status(200).send('ok')
+      }
+    })
+
     app.post('/line-checkdata/:forcompany', async (req, res) => {
       let thisparam = req.params.forcompany
       let thisforcompany = await axios.get('https://larkapi.soidea.co/getforcompany/'+thisparam);
