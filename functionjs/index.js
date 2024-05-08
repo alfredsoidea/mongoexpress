@@ -240,6 +240,62 @@ const functionjs = {
     
     return newlarkchatid
   },
+  create_usergroupline: async function(thisforcompany, groupId, thisstoken) {
+    let userDisplayname, userDisplayImage, avatarData, avatarKey, newlarkchatid, newUserdata
+    console.log("functionjscreate_userline")
+    let lark_app_api = thisforcompany.lark_app_api
+    let lark_app_secret = thisforcompany.lark_app_secret
+    let linetoken = thisforcompany.linetoken
+    let getGroup = await axios.request({
+      headers: {
+        Authorization: 'Bearer '+linetoken,
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+      method: "GET",
+      url: 'https://api.line.me/v2/bot/group/'+groupId+'/summary'
+    })
+    getGroup = getGroup.data
+    console.log(getGroup)
+    if (getGroup.groupName) {
+      userDisplayname = await getGroup.groupName
+    } else {
+      userDisplayname = ""
+    }
+
+    if (getGroup.pictureUrl) {
+      userDisplayImage = await getGroup.pictureUrl
+    } else {
+      userDisplayImage = "none"
+    }
+
+    const userDocRef = doc(dbstore, "usergroupline_"+thisforcompany.name, groupId);
+    await runTransaction(dbstore, async (transaction) => {
+      await transaction.update(userDocRef, { 
+        displayname: userDisplayname,
+        pictureurl: userDisplayImage
+      });
+    });
+
+    if (userDisplayImage == "none") {
+      newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , "none", thisstoken, groupId)
+      newUserdata = await runTransaction(dbstore, async (transaction) => {
+        await transaction.update(userDocRef, { 
+          larkchatid: newlarkchatid
+        })
+      })
+    } else {
+      avatarData = await functionjs.upload_avatar_lark(getGroup.pictureUrl , thisstoken)
+      avatarKey = await avatarData.data.data.image_key
+      newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken, groupId)
+      newUserdata = await runTransaction(dbstore, async (transaction) => {
+        await transaction.update(userDocRef, { 
+          larkchatid: newlarkchatid
+        })
+      })
+    }
+    
+    return newlarkchatid
+  },
   get_user_from_line: async function (userId, linetoken) {
     console.log("geting linedata from " + userId)
     let response = await axios.request({
@@ -472,6 +528,223 @@ const functionjs = {
     }
   
   },
+  get_userlinegroup_member: async function (thisstoken, linetoken, userId, groupId) {
+    let response = await axios.request({
+      headers: {
+        Authorization: `Bearer ${linetoken}`,
+        'Content-Type': 'application/json; charset=utf-8',
+      },
+      method: "GET",
+      url: 'https://api.line.me/v2/bot/group/'+groupId+'/member/' + userId
+    })
+    let linedata = response.data
+    return linedata
+  },
+  send_message_by_groupid: async function (thisstoken, thisforcompany, groupId, datamessage) {
+    let linetoken = thisforcompany.linetoken
+    let thismessagetype = datamessage.message_data.message.type
+    let datamessagekey = datamessage.id
+    let contentdata = datamessage.message_data
+    let datareturn = ""
+    let userdataref = doc(dbstore, "usergroupline_"+thisforcompany.name, groupId);
+    let userdataget = await getDoc(userdataref);
+    let userdata = await userdataget.data()
+    console.log(datamessage.message_data.source.userId)
+    await functionjs.set_groupmessage_status(datamessagekey, thisforcompany, 'process')
+    let thisuserget = await functionjs.get_userlinegroup_member(thisstoken, linetoken, datamessage.message_data.source.userId, groupId)
+    console.log(thisuserget)
+    switch(thismessagetype) {
+      case 'text':
+        let datasendtext = contentdata.message.text
+        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+          "receive_id": userdata.larkchatid,
+          "msg_type": "text",
+          "content": JSON.stringify({ "text": "("+thisuserget.displayName+") "+datasendtext })
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+        await functionjs.set_groupmessage_status(datamessagekey, thisforcompany, 'sent')
+        break;
+      case 'location':
+        //let datasendtext = contentdata.message.text
+        let addressname = ""
+        if (contentdata.message.address) {
+          addressname = contentdata.message.address + "\n"
+        } else if (contentdata.message.title) {
+          addressname = contentdata.message.title + "\n"
+        }
+        
+        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+          "receive_id": userdata.larkchatid,
+          "msg_type": "text",
+          "content": JSON.stringify({ "text": addressname + "https://www.google.com/maps?q="+contentdata.message.latitude+","+contentdata.message.longitude })
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+        await functionjs.set_groupmessage_status(datamessagekey, thisforcompany, 'sent')
+        break;
+      case 'sticker':
+        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+          "receive_id": userdata.larkchatid,
+          "msg_type": "text",
+          "content": JSON.stringify({ "text": "[ sticker ]" })
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+        await functionjs.set_groupmessage_status(datamessagekey, thisforcompany, 'sent')
+        break;
+      case 'audio':
+        let dataresultaudio = await axios({ 
+          method: 'get', 
+          responseType: 'arraybuffer',
+          url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
+          headers: { 
+            'Authorization': 'Bearer '+linetoken
+          }
+        })
+
+        let fileDataaudio = await dataresultaudio.data
+
+        let dataresultsentaudio = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
+          "file_type": "opus",
+          "duration": contentdata.message.duration,
+          "file": fileDataaudio
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'multipart/form-data' 
+          }
+        })
+        console.log("dataresultsentaudio")
+        //console.log(dataresultsentaudio)
+        //sending audio message
+        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+          "receive_id": userdata.larkchatid,
+          "content": JSON.stringify({
+            "file_key": dataresultsentaudio.data.data.file_key
+          }),
+          "msg_type": "audio"
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+
+        await functionjs.set_groupmessage_status(datamessagekey, thisforcompany, 'sent')
+        break;
+      case 'video':
+        console.log('video')
+        let dataresultvideo = await axios({ 
+          method: 'get', 
+          responseType: 'arraybuffer',
+          url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
+          headers: { 
+            'Authorization': 'Bearer '+linetoken
+          }
+        })
+
+        let fileData = dataresultvideo.data
+
+        let dataresultsentvideo = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
+          "file_type": "mp4",
+          "duration": contentdata.message.duration,
+          "file_name": "video_"+functionjs.makeid(20)+".mp4",
+          "file": fileData
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'multipart/form-data' 
+          }
+        })
+
+        let dataresultvideo_preview = await axios({ 
+          method: 'get', 
+          responseType: 'arraybuffer',
+          url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content/preview',
+          headers: {  'Authorization': 'Bearer '+linetoken }
+        })
+
+        console.log("dataresultvideo_preview")
+
+        let videoPrev = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
+          "image_type": "message",
+          "image": dataresultvideo_preview.data
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'multipart/form-data' 
+          }
+        })
+
+        //sending video message
+        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+          "receive_id": userdata.larkchatid,
+          "msg_type": "media",
+          "content": JSON.stringify({
+            "image_key": videoPrev.data.data.image_key,
+            "file_key": dataresultsentvideo.data.data.file_key,
+          })
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+
+        await functionjs.set_groupmessage_status(datamessagekey, thisforcompany, 'sent')
+        break;
+      case 'image':
+        var dataresult = await axios({ 
+          method: 'get', 
+          responseType: 'arraybuffer',
+          url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
+          headers: { 
+            'Authorization': 'Bearer '+linetoken
+          }
+        })
+        var dataresultsent = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
+          "image_type": "message",
+          "image": dataresult.data
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'multipart/form-data' 
+          }
+        })
+        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+          "receive_id": userdata.larkchatid,
+          "msg_type": "image",
+          "content": JSON.stringify({
+            "image_key": dataresultsent.data.data.image_key
+          })
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+        await functionjs.set_groupmessage_status(datamessagekey, thisforcompany, 'sent')
+        break;
+      default:
+    }
+  
+  },
   set_larkmessage_status: async function (datamessagekey, thisforcompany, statuschange) {
     let dataref = await collection(dbstore, "message_lark_"+thisforcompany.name)
     let datarefdoc = await doc(dataref, datamessagekey)
@@ -492,6 +765,24 @@ const functionjs = {
   },
   set_message_status: async function (datamessagekey, thisforcompany, statuschange) {
     let dataref = await collection(dbstore, "message_line_"+thisforcompany.name)
+    let datarefdoc = await doc(dataref, datamessagekey)
+    try {
+      await runTransaction(dbstore, async (transaction) => {
+      const sfDoc = await transaction.get(datarefdoc);
+        if (!sfDoc.exists()) {
+          throw "Document does not exist!";
+        }
+
+        const newPopulation = statuschange;
+        transaction.update(datarefdoc, { status: newPopulation });
+      });
+      console.log('Transaction success!');
+    } catch (e) {
+      console.log('Transaction failure:', e);
+    }
+  },
+  set_groupmessage_status: async function (datamessagekey, thisforcompany, statuschange) {
+    let dataref = await collection(dbstore, "message_groupline_"+thisforcompany.name)
     let datarefdoc = await doc(dataref, datamessagekey)
     try {
       await runTransaction(dbstore, async (transaction) => {
@@ -735,6 +1026,27 @@ const functionjs = {
         await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
     }
+  },
+  query_message_by_usergroup: async function (thisstoken, thisforcompany, groupId) {
+    let dataref = collection(dbstore, "message_groupline_"+thisforcompany.name)
+    const q = query(dataref, where("status", "==", "wait"), where("group_id", "==", groupId) );
+    const querySnapshot = await getDocs(q);
+    let newdatajson = []
+    await querySnapshot.forEach(async (doc) => {
+      let bodydata = doc.data()
+      bodydata.id = doc.id
+      newdatajson.push(bodydata)
+    });
+
+    // newdatajson.sort(functionjs.compareBytime);
+    // console.log(newdatajson)
+
+    //let messagejson = [];
+    //console.log(thisforcompany)
+    await newdatajson.forEach(async (element) => {
+      await functionjs.send_message_by_groupid(thisstoken, thisforcompany, groupId, element)
+    });
+    console.log("start query_message_by_user")
   },
   query_message_by_user: async function (thisstoken, thisforcompany, userId) {
     let dataref = collection(dbstore, "message_line_"+thisforcompany.name)
