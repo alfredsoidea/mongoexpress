@@ -559,7 +559,7 @@ const functionjs = {
         datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
           "receive_id": userdata.larkchatid,
           "msg_type": "text",
-          "content": JSON.stringify({ "text": "("+thisuserget.displayName+") "+datasendtext })
+          "content": JSON.stringify({ "text": "["+thisuserget.displayName+"] "+datasendtext })
         }, {
           headers: {
             'Authorization': 'Bearer '+thisstoken,
