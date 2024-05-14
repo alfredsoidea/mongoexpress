@@ -763,6 +763,24 @@ const functionjs = {
       console.log('Transaction failure:', e);
     }
   },
+  set_grouplarkmessage_status: async function (datamessagekey, thisforcompany, statuschange) {
+    let dataref = await collection(dbstore, "message_grouplark_"+thisforcompany.name)
+    let datarefdoc = await doc(dataref, datamessagekey)
+    try {
+      await runTransaction(dbstore, async (transaction) => {
+      const sfDoc = await transaction.get(datarefdoc);
+        if (!sfDoc.exists()) {
+          throw "Document does not exist!";
+        }
+
+        const newPopulation = statuschange;
+        transaction.update(datarefdoc, { status: newPopulation });
+      });
+      console.log('Transaction success!');
+    } catch (e) {
+      console.log('Transaction failure:', e);
+    }
+  },
   set_message_status: async function (datamessagekey, thisforcompany, statuschange) {
     let dataref = await collection(dbstore, "message_line_"+thisforcompany.name)
     let datarefdoc = await doc(dataref, datamessagekey)
@@ -1058,7 +1076,7 @@ const functionjs = {
             }
           })
         }
-        await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
+        await functionjs.set_grouplarkmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
       case 'post':
         datasendtext = JSON.parse(datamessage.message_data.content)
@@ -1094,7 +1112,7 @@ const functionjs = {
             }
           })
         }
-        await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
+        await functionjs.set_grouplarkmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
       case 'image':
         datasendtext = datamessage.message_data
@@ -1136,7 +1154,7 @@ const functionjs = {
             'Accept': 'application/json'
           }
         })
-        await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
+        await functionjs.set_grouplarkmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
       case 'media':
         datasendtext = datamessage.message_data
@@ -1199,7 +1217,7 @@ const functionjs = {
             'Accept': 'application/json'
           }
         })
-        await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
+        await functionjs.set_grouplarkmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
       case 'file':
         console.log('this file')
@@ -1227,7 +1245,7 @@ const functionjs = {
         }, {
           headers: {}
         })
-        await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
+        await functionjs.set_grouplarkmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
     }
   },
