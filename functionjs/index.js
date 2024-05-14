@@ -1027,6 +1027,210 @@ const functionjs = {
         break;
     }
   },
+  send_message_from_grouplark: async function (thisstoken, thisforcompany, groupId, datamessage) {
+    let linetoken = thisforcompany.linetoken
+    let userdataref = doc(dbstore, "usergroupline_"+thisforcompany.name, groupId);
+    let userdataget = await getDoc(userdataref);
+    let userdata = await userdataget.data()
+    let datasendtext, datareturn
+    let datamessagekey = datamessage.id
+    console.log(datamessagekey)
+    let imageresponse, videoresponse, fileresponse
+    await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'process')
+    let thismessagetype = datamessage.message_data.message_type
+    switch(thismessagetype) {
+      case 'text':
+        datasendtext = JSON.parse(datamessage.message_data.content).text
+        if (datasendtext.includes('@_')) {} else {
+          datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
+            "to": groupId,
+            "messages": [
+              {
+                "type": thismessagetype,
+                "text": datasendtext
+              }
+            ]
+          }, {
+            headers: {
+              'Authorization': 'Bearer '+linetoken,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          })
+        }
+        await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
+        break;
+      case 'post':
+        datasendtext = JSON.parse(datamessage.message_data.content)
+        console.log(datasendtext.content)
+        let postnewtext = ""
+        let checktag = false
+        postnewtext = postnewtext + datasendtext.title + "\n"
+        datasendtext.content.forEach((element) => {
+          element.forEach((elementinner) => {
+            if (elementinner.tag == "at") {
+              checktag = true
+            }
+            postnewtext = postnewtext + elementinner.text + "\n"
+          })
+        });
+        console.log(postnewtext)
+        // console.log("checktag")
+        // console.log(checktag)
+        if (checktag == false) {
+          datareturn = await axios.post('https://api.line.me/v2/bot/message/push', {
+            "to": groupId,
+            "messages": [
+              {
+                "type": "text",
+                "text": postnewtext
+              }
+            ]
+          }, {
+            headers: {
+              'Authorization': 'Bearer '+linetoken,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          })
+        }
+        await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
+        break;
+      case 'image':
+        datasendtext = datamessage.message_data
+        datareturn = await axios.request({
+          headers: {
+            Authorization: `Bearer ${thisstoken}`,
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+          responseType: 'arraybuffer',
+          method: "GET",
+          url: 'https://open.larksuite.com/open-apis/im/v1/messages/'+datasendtext.message_id+'/resources/'+JSON.parse(datasendtext.content).image_key+'?type=image'
+        })
+        //console.log(datareturn)
+
+        let filedata = datareturn
+        const metadata = {
+          contentType: 'image/jpeg'
+        };
+        const storageRef = await ref(storage, 'imageslark/' + functionjs.makeid(30) + "-image");
+        const uploadTask = await uploadBytes(storageRef, filedata.data).then((snapshot) => {
+          return getDownloadURL(snapshot.ref).then((downloadURL) => {
+            return downloadURL
+          });
+        });
+
+        await axios.post('https://api.line.me/v2/bot/message/push', {
+          "to": groupId,
+          "messages": [
+            {
+              "type": thismessagetype,
+              "originalContentUrl": uploadTask,
+              "previewImageUrl": uploadTask
+            }
+          ]
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+linetoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+        await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
+        break;
+      case 'media':
+        datasendtext = datamessage.message_data
+        let mediaUrlFile = 'https://open.larksuite.com/open-apis/im/v1/messages/'+datasendtext.message_id+'/resources/'+JSON.parse(datasendtext.content).file_key+'?type=file';
+        let mediaUrlImage = 'https://open.larksuite.com/open-apis/im/v1/messages/'+datasendtext.message_id+'/resources/'+JSON.parse(datasendtext.content).image_key+'?type=image';
+        //$filename = functionjs.makeid(30)+'.mp4';
+        //$filename3 = functionjs.makeid(30)+'.jpg';
+        
+
+        let mediaUrlImageRes = await axios.request({
+          headers: {
+            Authorization: `Bearer ${thisstoken}`,
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+          responseType: 'arraybuffer',
+          method: "GET",
+          url: mediaUrlImage
+        })
+
+        let mediaUrlFileRes = await axios.request({
+          headers: {
+            Authorization: `Bearer ${thisstoken}`,
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+          responseType: 'arraybuffer',
+          method: "GET",
+          url: mediaUrlFile
+        })
+
+
+        //console.log(datareturn)
+
+        const storageRef1 = await ref(storage, 'videoslark/' + functionjs.makeid(30) + "-" + JSON.parse(datasendtext.content).file_name);
+        const uploadTask1 = await uploadBytes(storageRef1, mediaUrlFileRes.data).then((snapshot) => {
+          return getDownloadURL(snapshot.ref).then((downloadURL) => {
+            return downloadURL
+          });
+        });
+
+        const storageRef2 = await ref(storage, 'videoslark/' + functionjs.makeid(30) + "-videopreview.jpg");
+        const uploadTask2 = await uploadBytes(storageRef2, mediaUrlImageRes.data).then((snapshot) => {
+          return getDownloadURL(snapshot.ref).then((downloadURL) => {
+            return downloadURL
+          });
+        });
+
+        await axios.post('https://api.line.me/v2/bot/message/push', {
+          "to": groupId,
+          "messages": [
+            {
+              "type": "video",
+              "originalContentUrl": uploadTask1,
+              "previewImageUrl": uploadTask2
+            }
+          ]
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+linetoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+        await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
+        break;
+      case 'file':
+        console.log('this file')
+        datasendtext = datamessage.message_data
+        let mediaUrlFile2 = 'https://open.larksuite.com/open-apis/im/v1/messages/'+datasendtext.message_id+'/resources/'+JSON.parse(datasendtext.content).file_key+'?type=file';
+        let mediaUrlFile2Res = await axios.request({
+          headers: {
+            Authorization: `Bearer ${thisstoken}`,
+            'Content-Type': 'application/json; charset=utf-8',
+          },
+          responseType: 'arraybuffer',
+          method: "GET",
+          url: mediaUrlFile2
+        })
+        //const storageRefforFile = await ref(storage, 'filelark/' + functionjs.makeid(30) + "-" + JSON.parse(datasendtext.content).file_name);
+        // const uploadTaskforFile = await uploadBytes(storageRefforFile, mediaUrlFile2Res.data).then(async (snapshot) => {
+        //   return await getDownloadURL(snapshot.ref).then((downloadURL) => {
+        //     console.log(downloadURL)
+        //     return downloadURL
+        //   });
+        // });
+        //console.log('https://larkapi.soidea.co/uploadmaxfile/'+datasendtext.message_id+'/'+JSON.parse(datasendtext.content).file_key+'/'+thisstoken+'/'+userId+'/'+datamessagekey+'/'+thisforcompany.name+'/'+userId)
+        await axios.post('https://larkapi.soidea.co/uploadmaxfilegroup/'+datasendtext.message_id+'/'+JSON.parse(datasendtext.content).file_key+'/'+thisstoken+'/'+groupId+'/'+datamessagekey+'/'+thisforcompany.name+'/'+groupId, {
+          "linetoken": linetoken,
+        }, {
+          headers: {}
+        })
+        await functionjs.set_larkmessage_status(datamessagekey, thisforcompany, 'sent')
+        break;
+    }
+  },
   query_message_by_usergroup: async function (thisstoken, thisforcompany, groupId) {
     let dataref = collection(dbstore, "message_groupline_"+thisforcompany.name)
     const q = query(dataref, where("status", "==", "wait"), where("group_id", "==", groupId) );

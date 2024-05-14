@@ -104,6 +104,7 @@ const larkApi = (app) => {
     let thisforcompany,thisstokenres
     let thisparam = req.params.forcompany
     let requestbody = req.body
+    let resuser
     thisforcompany = await functionjs.getForcompany(thisparam)
     console.log(JSON.stringify(req.body))
     console.log(req.body)
@@ -114,7 +115,10 @@ const larkApi = (app) => {
     } else {
       let messageraw = requestbody['event']
       let thislarkchatid = messageraw.message.chat_id
-      let resuser = await functionjs.get_userline_data_larkchat(thisforcompany, thislarkchatid)
+      //let resuser = await functionjs.get_userline_data_larkchat(thisforcompany, thislarkchatid)
+      const quser = query(collection(dbstore, "usergroupline_"+thisforcompany.name), where("larkchatid", "==", larkchatid));
+      resuser = await getDocs(q);
+      querySnapshot.forEach((doc) => { userdata = doc.data() });
       if (messageraw.message.message_type == 'text' || messageraw.message.message_type == 'post' || messageraw.message.message_type == 'image' || messageraw.message.message_type == 'media'|| messageraw.message.message_type == 'file') {
         if (messageraw.message.message_type == 'text' && JSON.parse(messageraw.message.content).text.includes('@_')) {
           // await addDoc(collection(dbstore, "message_lark_"+thisparam), {
@@ -131,7 +135,7 @@ const larkApi = (app) => {
             if (messageraw.message.status == "tester") {
               innercheck = false
             } else {
-              let dataref2 = collection(dbstore, "message_lark_"+thisparam)
+              let dataref2 = collection(dbstore, "message_grouplark_"+thisparam)
               const q2 = query(dataref2, where("message_id", "==", messageraw.message.message_id));
               const querySnapshot2 = await getDocs(q2);
               await querySnapshot2.forEach(async (doc) => {
@@ -141,9 +145,9 @@ const larkApi = (app) => {
             console.log(innercheck)
             if (innercheck == false) {
               console.log("req.body2")
-              await addDoc(collection(dbstore, "message_lark_"+thisparam), {
+              await addDoc(collection(dbstore, "message_grouplark_"+thisparam), {
                 init_timestamp: requestbody['event'].message.create_time,
-                user_id: resuser.user_id,
+                groupId: resuser.groupId,
                 message_data: messageraw.message,
                 message_id: messageraw.message.message_id,
                 status: "wait",
@@ -154,7 +158,19 @@ const larkApi = (app) => {
             }
         }
         let thisstoken = await functionjs.getTokenlark(thisforcompany)
-        let querymess = await functionjs.query_message_by_larkchat(thisstoken, thisforcompany, resuser)
+        //let querymess = await functionjs.query_message_by_larkchat(thisstoken, thisforcompany, resuser)
+        let dataref = collection(dbstore, "message_grouplark_"+thisforcompany.name)
+        const q = query(dataref, where("status", "==", "wait"), where("groupId", "==", resuser.groupId) );
+        const querySnapshot = await getDocs(q);
+        let newdatajson = []
+        await querySnapshot.forEach(async (doc) => {
+          let bodydata = doc.data()
+          bodydata.id = doc.id
+          newdatajson.push(bodydata)
+        });
+        await newdatajson.forEach(async (element) => {
+          await functionjs.send_message_from_grouplark(thisstoken, thisforcompany, resuser.groupId, element)
+        });
       }
       await res.status(200).send("ok")
     }
