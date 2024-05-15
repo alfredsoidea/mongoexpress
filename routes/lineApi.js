@@ -147,7 +147,7 @@ const lineApi = (app) => {
         const docSnap2 = await getDoc(docRef2);
         let thisuserdata2 = await docSnap2.data()
         await allmessage.forEach((currentElement, index) => {
-          if (currentElement.message.type == 'text' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image' || currentElement.message.type == 'location' ) {
+          if (currentElement.message.type == 'text' || currentElement.message.type == 'file' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image' || currentElement.message.type == 'location' ) {
             addDoc(collection(dbstore, "message_groupline_"+thisparam), {
               init_timestamp: currentElement.timestamp,
               group_id: thisGroupId,
@@ -172,7 +172,6 @@ const lineApi = (app) => {
           }
         })
         let usergroupline_message = await functionjs.query_message_by_usergroup(thisstoken, thisforcompany, thisGroupId)
-        console.log(usergroupline_message)
       }
       await res.status(200).send('ok')
     })

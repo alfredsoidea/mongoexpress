@@ -569,6 +569,52 @@ const functionjs = {
         })
         await functionjs.set_groupmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
+      case 'file':
+        console.log('file')
+        let dataresultfile = await axios({ 
+          method: 'get', 
+          responseType: 'arraybuffer',
+          url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
+          headers: { 
+            'Authorization': 'Bearer '+linetoken
+          }
+        })
+
+        let dataresultsentpdffile = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
+          "file_type": "pdf",
+          "file_name": "pdffile_"+functionjs.makeid(20)+".pdf",
+          "file": dataresultfile.data
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'multipart/form-data' 
+          }
+        })
+
+        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+          "receive_id": userdata.larkchatid,
+          "msg_type": "post",
+          "content": JSON.stringify(
+            [ 
+              {
+                "tag": "text",
+                "text": "["+thisuserget.displayName+"]"
+              },
+              {
+                "tag": "media",
+                "file_key": dataresultsentpdffile.data.data.file_key
+              }
+            ])
+        }, {
+          headers: {
+            'Authorization': 'Bearer '+thisstoken,
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          }
+        })
+
+        await functionjs.set_groupmessage_status(datamessagekey, thisforcompany, 'sent')
+        break;
       case 'location':
         //let datasendtext = contentdata.message.text
         let addressname = ""
