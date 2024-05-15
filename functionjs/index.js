@@ -570,48 +570,71 @@ const functionjs = {
         await functionjs.set_groupmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
       case 'file':
-        console.log('file')
-        let dataresultfile = await axios({ 
-          method: 'get', 
-          responseType: 'arraybuffer',
-          url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
-          headers: { 
-            'Authorization': 'Bearer '+linetoken
-          }
-        })
+        //console.log('file')
 
-        let dataresultsentpdffile = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
-          "file_type": "pdf",
-          "file_name": "pdffile_"+functionjs.makeid(20)+".pdf",
-          "file": dataresultfile.data
-        }, {
-          headers: {
-            'Authorization': 'Bearer '+thisstoken,
-            'Content-Type': 'multipart/form-data' 
-          }
-        })
+        let dataresultsentpdffile = ""
+        let dataresultfile = ""
 
-        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-          "receive_id": userdata.larkchatid,
-          "msg_type": "post",
-          "content": JSON.stringify(
-            [ 
-              {
-                "tag": "text",
-                "text": "["+thisuserget.displayName+"]"
-              },
-              {
-                "tag": "media",
-                "file_key": dataresultsentpdffile.data.data.file_key
+
+        if (contentdata.message.fileSize > 3000000) {
+            await axios.post('https://larkapi.soidea.co/uploadmaxfilegroupmessage', {
+              "line_message_id": contentdata.message.id,
+              "group_id": userdata.groupId,
+              "linetoken": linetoken,
+              "larktoken": thisstoken,
+              "forcompany": thisforcompany.name
+            }, {
+              headers: {}
+            })
+        } else {
+          dataresultfile = await axios({ 
+            method: 'get', 
+            responseType: 'arraybuffer',
+            url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
+            headers: { 
+              'Authorization': 'Bearer '+linetoken
+            }
+          })
+          dataresultsentpdffile = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
+            "file_type": "pdf",
+            "file_name": "pdffile_"+functionjs.makeid(20)+".pdf",
+            "file": dataresultfile.data
+          }, {
+            headers: {
+              'Authorization': 'Bearer '+thisstoken,
+              'Content-Type': 'multipart/form-data' 
+            }
+          })
+
+          console.log(dataresultsentpdffile)
+          console.log(thisuserget.displayName)
+
+          // "content": "{\"en_us\":{\"title\":\"["+thisuserget.displayName+"]\",\"content\": [[{\"tag\": \"emotion\",\"emoji_type": "SMILE"}]]}}",
+
+          await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+            "receive_id": userdata.larkchatid,
+            "content": "{ \"text\": \"["+thisuserget.displayName+"] Sent pdf file👇🏻\" }",
+            "msg_type": "text"
+          }, {
+            headers: {
+              'Authorization': 'Bearer '+thisstoken,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          })
+
+          datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+            "receive_id": userdata.larkchatid,
+            "content": "{\"file_key\":\""+dataresultsentpdffile.data.data.file_key+"\"}",
+            "msg_type": "file"
+            }, {
+              headers: {
+                'Authorization': 'Bearer '+thisstoken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
               }
-            ])
-        }, {
-          headers: {
-            'Authorization': 'Bearer '+thisstoken,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
+            })
           }
-        })
 
         await functionjs.set_groupmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
@@ -772,12 +795,11 @@ const functionjs = {
             'Content-Type': 'multipart/form-data' 
           }
         })
-        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+
+        await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
           "receive_id": userdata.larkchatid,
-          "msg_type": "image",
-          "content": JSON.stringify({
-            "image_key": dataresultsent.data.data.image_key
-          })
+          "content": "{\"en_us\":{\"title\":\"["+thisuserget.displayName+"]\",\"content\": [[{\"tag\": \"img\",\"image_key\": \""+dataresultsent.data.data.image_key+"\"}]]}}",
+          "msg_type": "post"
         }, {
           headers: {
             'Authorization': 'Bearer '+thisstoken,
@@ -785,6 +807,7 @@ const functionjs = {
             'Accept': 'application/json'
           }
         })
+       
         await functionjs.set_groupmessage_status(datamessagekey, thisforcompany, 'sent')
         break;
       default:
@@ -1306,11 +1329,6 @@ const functionjs = {
       newdatajson.push(bodydata)
     });
 
-    // newdatajson.sort(functionjs.compareBytime);
-    // console.log(newdatajson)
-
-    //let messagejson = [];
-    //console.log(thisforcompany)
     await newdatajson.forEach(async (element) => {
       await functionjs.send_message_by_groupid(thisstoken, thisforcompany, groupId, element)
     });
