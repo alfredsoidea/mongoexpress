@@ -39,6 +39,7 @@ const dbstore = getFirestore();
 import functionjs from "../functionjs/index.js";
 
 const lineApi = (app) => {
+
     app.post('/line/webhook/:forcompany', async (req, res) => {
       let resuser,thisforcompany,thisstokenres
       let thisparam = req.params.forcompany
@@ -53,7 +54,7 @@ const lineApi = (app) => {
       const docSnap = await getDoc(docRef);
       let thisuserdata = await docSnap.data()
       await allmessage.forEach((currentElement, index) => {
-        if (currentElement.message.type == 'text' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image' || currentElement.message.type == 'location' ) {
+        if (currentElement.message.type == 'file' || currentElement.message.type == 'text' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image' || currentElement.message.type == 'location' ) {
           addDoc(collection(dbstore, "message_line_"+thisparam), {
             init_timestamp: currentElement.timestamp,
             user_id: userId,

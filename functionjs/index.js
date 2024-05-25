@@ -334,8 +334,10 @@ const functionjs = {
     let userdataget = await getDoc(userdataref);
     let userdata = await userdataget.data()
 
-    await functionjs.set_message_status(datamessagekey, thisforcompany, 'process')
+    console.log(userdata)
 
+    await functionjs.set_message_status(datamessagekey, thisforcompany, 'process')
+    console.log(thismessagetype)
     switch(thismessagetype) {
       case 'text':
         let datasendtext = contentdata.message.text
@@ -377,8 +379,8 @@ const functionjs = {
       case 'file':
         let dataresultsentpdffile = ""
         let dataresultfile = ""
-
-
+        console.log("fileSize")
+        console.log(contentdata.message.fileSize)
         if (contentdata.message.fileSize > 3000000) {
             await axios.post('https://larkapi.soidea.co/uploadmaxfilegroupmessage', {
               "line_message_id": contentdata.message.id,
@@ -408,8 +410,6 @@ const functionjs = {
               'Content-Type': 'multipart/form-data' 
             }
           })
-          console.log(dataresultsentpdffile)
-          console.log(thisuserget.displayName)
           datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
             "receive_id": userdata.larkchatid,
             "content": "{\"file_key\":\""+dataresultsentpdffile.data.data.file_key+"\"}",
@@ -1403,6 +1403,7 @@ const functionjs = {
 
     //let messagejson = [];
     //console.log(thisforcompany)
+    console.log("querymessage line")
     await newdatajson.forEach(async (element) => {
       await functionjs.send_message_by_userid(thisstoken, thisforcompany, userId, element)
     });
