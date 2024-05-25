@@ -374,6 +374,57 @@ const functionjs = {
         })
         await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
         break;
+      case 'file':
+        let dataresultsentpdffile = ""
+        let dataresultfile = ""
+
+
+        if (contentdata.message.fileSize > 3000000) {
+            await axios.post('https://larkapi.soidea.co/uploadmaxfilegroupmessage', {
+              "line_message_id": contentdata.message.id,
+              "group_id": userdata.userId,
+              "linetoken": linetoken,
+              "larktoken": thisstoken,
+              "forcompany": thisforcompany.name
+            }, {
+              headers: {}
+            })
+        } else {
+          dataresultfile = await axios({ 
+            method: 'get', 
+            responseType: 'arraybuffer',
+            url: 'https://api-data.line.me/v2/bot/message/'+contentdata.message.id+'/content',
+            headers: { 
+              'Authorization': 'Bearer '+linetoken
+            }
+          })
+          dataresultsentpdffile = await axios.post('https://open.larksuite.com/open-apis/im/v1/files', {
+            "file_type": "pdf",
+            "file_name": "pdffile_"+functionjs.makeid(20)+".pdf",
+            "file": dataresultfile.data
+          }, {
+            headers: {
+              'Authorization': 'Bearer '+thisstoken,
+              'Content-Type': 'multipart/form-data' 
+            }
+          })
+          console.log(dataresultsentpdffile)
+          console.log(thisuserget.displayName)
+          datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+            "receive_id": userdata.larkchatid,
+            "content": "{\"file_key\":\""+dataresultsentpdffile.data.data.file_key+"\"}",
+            "msg_type": "file"
+            }, {
+              headers: {
+                'Authorization': 'Bearer '+thisstoken,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+              }
+            })
+          }
+
+        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        break;
       case 'sticker':
         datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
           "receive_id": userdata.larkchatid,
@@ -500,29 +551,31 @@ const functionjs = {
             'Authorization': 'Bearer '+linetoken
           }
         })
-        var dataresultsent = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
-          "image_type": "message",
-          "image": dataresult.data
-        }, {
-          headers: {
-            'Authorization': 'Bearer '+thisstoken,
-            'Content-Type': 'multipart/form-data' 
-          }
-        })
-        datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-          "receive_id": userdata.larkchatid,
-          "msg_type": "image",
-          "content": JSON.stringify({
-            "image_key": dataresultsent.data.data.image_key
+        if (dataresult) {
+          var dataresultsent = await axios.post('https://open.larksuite.com/open-apis/im/v1/images', {
+            "image_type": "message",
+            "image": dataresult.data
+          }, {
+            headers: {
+              'Authorization': 'Bearer '+thisstoken,
+              'Content-Type': 'multipart/form-data' 
+            }
           })
-        }, {
-          headers: {
-            'Authorization': 'Bearer '+thisstoken,
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          }
-        })
-        await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+          datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+            "receive_id": userdata.larkchatid,
+            "msg_type": "image",
+            "content": JSON.stringify({
+              "image_key": dataresultsent.data.data.image_key
+            })
+          }, {
+            headers: {
+              'Authorization': 'Bearer '+thisstoken,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          })
+          await functionjs.set_message_status(datamessagekey, thisforcompany, 'sent')
+        }
         break;
       default:
     }
