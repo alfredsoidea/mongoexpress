@@ -10,6 +10,37 @@ import functionjs from "../functionjs/index.js";
 import fs from 'fs';
 import path from 'path';
 
+import { initializeApp } from "firebase/app";
+const firebaseConfig = {
+  apiKey: "AIzaSyBKU0BuRrLaVudLHwPjlMpVHkK5tW645Yo",
+  authDomain: "alfred-line-webhook-api.firebaseapp.com",
+  projectId: "alfred-line-webhook-api",
+  storageBucket: "alfred-line-webhook-api.appspot.com",
+  messagingSenderId: "586062678452",
+  appId: "1:586062678452:web:5aa9ba7ae0ae18bd770ae1"
+};
+const firebaseapp = initializeApp(firebaseConfig);
+import { getStorage, ref, uploadBytes, getDownloadURL, uploadBytesResumable, uploadString } from "firebase/storage";
+import { 
+          getDoc,
+          getDocs,
+          where,
+          orderBy,
+          doc,
+          query,
+          updateDoc,
+          setDoc,
+          addDoc,
+          increment,
+          getFirestore,
+          collection,
+          runTransaction,
+          serverTimestamp,
+} from "firebase/firestore";
+
+const storage = getStorage();
+const dbstore = getFirestore();
+
 const lineCommand = (app) => {
     
   app.get('/', (req, res) => {
@@ -21,11 +52,40 @@ const lineCommand = (app) => {
     let recordid = req.params.recordid
     const docRef = doc(dbstore, "message_line_"+thisparam, recordid)
     const docSnap = await getDoc(docRef);
-    let thisuserdata = await docSnap.data()
-    thisuserdata.id = recordid
+    let thismessdata = await docSnap.data()
+    thismessdata.id = recordid
     let thisforcompany = await functionjs.getForcompany(thisparam)
     let thisstokenres = await functionjs.getTokenlark(thisforcompany)
-    await functionjs.send_message_by_userid(thisstokenres, thisforcompany, thisuserdata.user_id, thisuserdata)
+    await functionjs.send_message_by_userid(thisstokenres, thisforcompany, thismessdata.user_id, thismessdata)
+    await res.status(200).send('ok')
+  });
+
+  app.post('/forcemessage_fixroom_all/line/webhook/:forcompany', async (req, res) => {
+    let thisparam = req.params.forcompany
+    let thisforcompany = await functionjs.getForcompany(thisparam)
+    let thisstokenres = await functionjs.getTokenlark(thisforcompany)
+    let responsecreate, responsequery
+    let dataref = await collection(dbstore, "userline_"+thisparam)
+    const qpre = await query(dataref, where("larkchatid", "==", "pre"));
+    const querySnapshot = await getDocs(qpre);
+    let newdatajson = []
+
+    let counter = 3
+
+    await querySnapshot.forEach(async (doc) => {
+      let bodydata = doc.data()
+      bodydata.id = doc.id
+      newdatajson.push(bodydata)
+    });
+
+    await newdatajson.forEach(async (element) => {
+      if (counter >= 0) {
+        responsecreate = await functionjs.create_userline(thisforcompany, element.id, thisstokenres)
+        responsequery = await functionjs.query_message_by_user(thisstokenres, thisforcompany ,element.id)
+      }
+      counter = counter - 1
+    });
+
     await res.status(200).send('ok')
   });
 

@@ -8,6 +8,7 @@ import OpenAI from 'openai';
 import fs from 'fs';
 import path from 'path';
 import cors from 'cors';
+import ejs from 'ejs';
 const app = express();
 
 app.use(morgan('dev'));
@@ -15,6 +16,8 @@ app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
+// app.set('view engine', 'html');
+// app.engine('html', ejs.renderFile);
 
 import { lineApi } from './routes/lineApi.js';
 import { larkApi } from './routes/larkApi.js';

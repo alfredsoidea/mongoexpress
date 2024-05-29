@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>userdata</title>
+</head>
+<body>
+	<script>
+		import firebase from "firebase/app";
+		import "firebase/firestore";
+
+		// TODO: Replace the following with your app's Firebase project configuration
+		// See: https://support.google.com/firebase/answer/7015592
+		const firebaseConfig = {
+		    apiKey: "AIzaSyBKU0BuRrLaVudLHwPjlMpVHkK5tW645Yo",
+		    authDomain: "alfred-line-webhook-api.firebaseapp.com",
+		    projectId: "alfred-line-webhook-api",
+		    storageBucket: "alfred-line-webhook-api.appspot.com",
+		    messagingSenderId: "586062678452",
+		    appId: "1:586062678452:web:5aa9ba7ae0ae18bd770ae1"
+		};
+
+		// Initialize Firebase
+		firebase.initializeApp(firebaseConfig);
+
+
+		// Initialize Cloud Firestore and get a reference to the service
+		const db = firebase.firestore();
+		
+	</script>
+</body>
+</html>
