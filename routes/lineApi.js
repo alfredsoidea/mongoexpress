@@ -197,6 +197,29 @@ const lineApi = (app) => {
       res.status(200).send('ok')
     })
 
+    app.post('/line-sendpdf', async (req, res) => {
+      let requestbody = req.body
+      console.log(JSON.stringify(requestbody))
+      console.log(requestbody)
+      let datasendtext = "You have receive a PDF file : "+requestbody.imageurl
+      datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
+        "receive_id": userdata.larkchatid,
+        "msg_type": "text",
+        "content": JSON.stringify({ "text": datasendtext })
+      }, {
+        headers: {
+          'Authorization': 'Bearer '+thisstoken,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      })
+    })
+
+    app.get('/line-readpdf/:linkview', async (req, res) => {
+      //let linkview = req.params.linkview
+      //res.redirect(linkview);
+    })
+
 };
 
 export { lineApi };
