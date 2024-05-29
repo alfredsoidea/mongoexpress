@@ -387,6 +387,7 @@ const functionjs = {
               "group_id": userdata.userId,
               "linetoken": linetoken,
               "larktoken": thisstoken,
+              "larkchatid": userdata.larkchatid,
               "forcompany": thisforcompany.name
             }, {
               headers: {}
