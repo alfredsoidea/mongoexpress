@@ -203,7 +203,7 @@ const lineApi = (app) => {
       console.log(requestbody)
       let datasendtext = "You have receive a PDF file: " + requestbody.imageurl
       datareturn = await axios.post('https://open.larksuite.com/open-apis/im/v1/messages?receive_id_type=chat_id', {
-        "receive_id": requestbody.datamessagekey,
+        "receive_id": requestbody.larkchatid,
         "msg_type": "text",
         "content": JSON.stringify({ "text": datasendtext })
       }, {
