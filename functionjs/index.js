@@ -1398,11 +1398,7 @@ const functionjs = {
       newdatajson.push(bodydata)
     });
 
-    // newdatajson.sort(functionjs.compareBytime);
-    // console.log(newdatajson)
-
-    //let messagejson = [];
-    //console.log(thisforcompany)
+   
     console.log("querymessage line")
     await newdatajson.forEach(async (element) => {
       await functionjs.send_message_by_userid(thisstoken, thisforcompany, userId, element)
