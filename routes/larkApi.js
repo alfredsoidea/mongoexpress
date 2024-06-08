@@ -120,7 +120,6 @@ const larkApi = (app) => {
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach((doc) => { resuser = doc.data() });
       if (messageraw.message.chat_type == 'group') {
-        //querySnapshot.forEach((doc) => { userdata = doc.data() });
         if (messageraw.message.message_type == 'text' || messageraw.message.message_type == 'post' || messageraw.message.message_type == 'image' || messageraw.message.message_type == 'media'|| messageraw.message.message_type == 'file') {
           if (messageraw.message.message_type == 'text' && JSON.parse(messageraw.message.content).text.includes('@_')) {
             // await addDoc(collection(dbstore, "message_lark_"+thisparam), {
