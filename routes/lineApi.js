@@ -115,43 +115,22 @@ const lineApi = (app) => {
       let thisstoken
       let requestbody = req.body
       let allmessage = requestbody['events']
-      let thisGroupId = allmessage[0].source.groupId
       console.log(thisparam)
       console.log(requestbody)
       console.log(JSON.stringify(req.body))
       thisforcompany = await functionjs.getForcompany(thisparam)
       thisstoken = await functionjs.getTokenlark(thisforcompany)
       console.log("allmessage.type")
-      if (allmessage[0].type == "join") {
-        console.log("Joined")
-        const docRef = doc(dbstore, "usergroupline_"+thisparam, thisGroupId)
-        const docSnap = await getDoc(docRef);
-        let thisuserdata = await docSnap.data()
-        if (docSnap.exists()) {
-          await res.status(200).send('ok')
-        } else {
-          await setDoc(doc(dbstore, "usergroupline_"+thisparam, thisGroupId), {
-            forcompany: thisparam,
-            timestamp: serverTimestamp(),
-            displayname: "pre",
-            larkchatid: "pre",
-            pictureurl: "pre",
-            groupId: thisGroupId
-          });
-          let usergroupline = await functionjs.create_usergroupline(thisforcompany, thisGroupId, thisstoken)
-          console.log(usergroupline)
-        }
-      } else if (allmessage[0].type == "leave") {
-
-      } else if (allmessage[0].type == "message") {
-        const docRef2 = doc(dbstore, "usergroupline_"+thisparam, thisGroupId)
-        const docSnap2 = await getDoc(docRef2);
-        let thisuserdata2 = await docSnap2.data()
+      console.log(allmessage[0].type)
+      let usergroupline_message, usergroupline
+      if (allmessage[0].source.type == 'user') {
+        let thisUserId = allmessage[0].source.userId
         await allmessage.forEach((currentElement, index) => {
           if (currentElement.message.type == 'text' || currentElement.message.type == 'file' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image' || currentElement.message.type == 'location' ) {
             addDoc(collection(dbstore, "message_groupline_"+thisparam), {
               init_timestamp: currentElement.timestamp,
-              group_id: thisGroupId,
+              user_id: thisUserId,
+              typechat: 'user',
               message_data: currentElement,
               status: "wait",
               forcompany: thisparam,
@@ -162,9 +141,10 @@ const lineApi = (app) => {
           } else {
             addDoc(collection(dbstore, "message_groupline_error_"+thisparam), {
               init_timestamp: currentElement.timestamp,
-              group_id: thisGroupId,
+              user_id: thisUserId,
               message_data: currentElement,
               status: "wait",
+              typechat: 'user',
               forcompany: thisparam,
               timestamp: serverTimestamp(),
               created_at: Date.now(),
@@ -172,9 +152,97 @@ const lineApi = (app) => {
             });
           }
         })
-        let usergroupline_message = await functionjs.query_message_by_usergroup(thisstoken, thisforcompany, thisGroupId)
+        console.log("Joined user")
+        const docRef3 = doc(dbstore, "usergroupline_"+thisparam, thisUserId)
+        const docSnap3 = await getDoc(docRef3);
+        let thisuserdata = await docSnap3.data()
+        if (docSnap3.exists()) {
+          await res.status(200).send('ok')
+        } else {
+          console.log("Joined user no")
+          await setDoc(doc(dbstore, "usergroupline_"+thisparam, thisUserId), {
+            forcompany: thisparam,
+            timestamp: serverTimestamp(),
+            displayname: "pre",
+            larkchatid: "pre",
+            pictureurl: "pre",
+            userId: thisUserId
+          });
+          usergroupline = await functionjs.create_usergroupline(thisforcompany, thisUserId, thisstoken, 'user')
+        }
+        usergroupline_message = await functionjs.query_message_by_usergroup(thisstoken, thisforcompany, thisUserId ,'user')
+        await res.status(200).send('ok')
+      } else {
+        let thisGroupId = allmessage[0].source.groupId
+        if (allmessage[0].type == "join") {
+          console.log("Joined")
+          const docRef = doc(dbstore, "usergroupline_"+thisparam, thisGroupId)
+          const docSnap = await getDoc(docRef);
+          let thisuserdata = await docSnap.data()
+          if (docSnap.exists()) {
+            await res.status(200).send('ok')
+          } else {
+            await setDoc(doc(dbstore, "usergroupline_"+thisparam, thisGroupId), {
+              forcompany: thisparam,
+              timestamp: serverTimestamp(),
+              displayname: "pre",
+              larkchatid: "pre",
+              pictureurl: "pre",
+              groupId: thisGroupId
+            });
+            usergroupline = await functionjs.create_usergroupline(thisforcompany, thisGroupId, thisstoken, 'group')
+            console.log(usergroupline)
+            await res.status(200).send('ok')
+          }
+        } else if (allmessage[0].type == "leave") {
+          await res.status(200).send('ok')
+        } else if (allmessage[0].type == "message") {
+          const docRef2 = doc(dbstore, "usergroupline_"+thisparam, thisGroupId)
+          const docSnap2 = await getDoc(docRef2);
+          if (docSnap2.exists()) {
+          } else {
+            await setDoc(doc(dbstore, "usergroupline_"+thisparam, thisGroupId), {
+              forcompany: thisparam,
+              timestamp: serverTimestamp(),
+              displayname: "pre",
+              larkchatid: "pre",
+              pictureurl: "pre",
+              groupId: thisGroupId
+            });
+            usergroupline = await functionjs.create_usergroupline(thisforcompany, thisGroupId, thisstoken, "group")
+          }
+          let thisuserdata2 = await docSnap2.data()
+          await allmessage.forEach((currentElement, index) => {
+            if (currentElement.message.type == 'text' || currentElement.message.type == 'file' || currentElement.message.type == 'sticker' || currentElement.message.type == 'audio' || currentElement.message.type == 'video' || currentElement.message.type == 'image' || currentElement.message.type == 'location' ) {
+              addDoc(collection(dbstore, "message_groupline_"+thisparam), {
+                init_timestamp: currentElement.timestamp,
+                group_id: thisGroupId,
+                typechat: 'group',
+                message_data: currentElement,
+                status: "wait",
+                forcompany: thisparam,
+                timestamp: serverTimestamp(),
+                created_at: Date.now(),
+                messagetype: currentElement.message.type
+              });
+            } else {
+              addDoc(collection(dbstore, "message_groupline_error_"+thisparam), {
+                init_timestamp: currentElement.timestamp,
+                group_id: thisGroupId,
+                message_data: currentElement,
+                status: "wait",
+                typechat: 'group',
+                forcompany: thisparam,
+                timestamp: serverTimestamp(),
+                created_at: Date.now(),
+                messagetype: currentElement.message.type
+              });
+            }
+          })
+          usergroupline_message = await functionjs.query_message_by_usergroup(thisstoken, thisforcompany, thisGroupId, 'group')
+          await res.status(200).send('ok')
+        }
       }
-      await res.status(200).send('ok')
     })
 
     app.post('/line-checkdata/:forcompany', async (req, res) => {

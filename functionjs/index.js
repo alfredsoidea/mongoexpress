@@ -240,59 +240,114 @@ const functionjs = {
     
     return newlarkchatid
   },
-  create_usergroupline: async function(thisforcompany, groupId, thisstoken) {
+  create_usergroupline: async function(thisforcompany, groupId, thisstoken, chattype) {
     let userDisplayname, userDisplayImage, avatarData, avatarKey, newlarkchatid, newUserdata
     console.log("functionjscreate_userline")
     let lark_app_api = thisforcompany.lark_app_api
     let lark_app_secret = thisforcompany.lark_app_secret
     let linetoken = thisforcompany.linetoken
-    let getGroup = await axios.request({
-      headers: {
-        Authorization: 'Bearer '+linetoken,
-        'Content-Type': 'application/json; charset=utf-8',
-      },
-      method: "GET",
-      url: 'https://api.line.me/v2/bot/group/'+groupId+'/summary'
-    })
-    getGroup = getGroup.data
-    console.log(getGroup)
-    if (getGroup.groupName) {
-      userDisplayname = await getGroup.groupName
-    } else {
-      userDisplayname = ""
+    console.log(chattype)
+    let getUser, getGroup
+    let toSetId = ''
+
+    if (chattype == 'group') {
+      getGroup = await axios.request({
+        headers: {
+          Authorization: 'Bearer '+linetoken,
+          'Content-Type': 'application/json; charset=utf-8',
+        },
+        method: "GET",
+        url: 'https://api.line.me/v2/bot/group/'+groupId+'/summary'
+      })
+      getGroup = getGroup.data
+      toSetId = getGroup.groupId
+      console.log("getGroup")
+      if (getGroup.groupName) {
+        userDisplayname = await getGroup.groupName
+      } else {
+        userDisplayname = ""
+      }
+  
+      if (getGroup.pictureUrl) {
+        userDisplayImage = await getGroup.pictureUrl
+      } else {
+        userDisplayImage = "none"
+      }
     }
 
-    if (getGroup.pictureUrl) {
-      userDisplayImage = await getGroup.pictureUrl
-    } else {
-      userDisplayImage = "none"
+    if (chattype == 'user') {
+      getUser = await functionjs.get_user_from_line(groupId, linetoken)
+      console.log("await getUser")
+      console.log(await getUser)
+      toSetId = getUser.userId
+      if (getUser.displayName) {
+        userDisplayname = await getUser.displayName
+      } else {
+        userDisplayname = ""
+      }
+  
+      if (getUser.pictureUrl) {
+        userDisplayImage = await getUser.pictureUrl
+      } else {
+        userDisplayImage = "none"
+      }
     }
 
-    const userDocRef = doc(dbstore, "usergroupline_"+thisforcompany.name, groupId);
-    await runTransaction(dbstore, async (transaction) => {
-      await transaction.update(userDocRef, { 
-        displayname: userDisplayname,
-        pictureurl: userDisplayImage
+
+    const userDocRef = doc(dbstore, "usergroupline_"+thisforcompany.name, toSetId);
+
+    if (chattype == 'user') {
+      await runTransaction(dbstore, async (transaction) => {
+        await transaction.update(userDocRef, { 
+          displayname: userDisplayname,
+          pictureurl: userDisplayImage
+        });
       });
-    });
-
-    if (userDisplayImage == "none") {
-      newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , "none", thisstoken, groupId)
-      newUserdata = await runTransaction(dbstore, async (transaction) => {
-        await transaction.update(userDocRef, { 
-          larkchatid: newlarkchatid
+  
+      if (userDisplayImage == "none") {
+        newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , "none", thisstoken, groupId)
+        newUserdata = await runTransaction(dbstore, async (transaction) => {
+          await transaction.update(userDocRef, { 
+            larkchatid: newlarkchatid
+          })
         })
-      })
+      } else {
+        avatarData = await functionjs.upload_avatar_lark(getUser.pictureUrl , thisstoken)
+        avatarKey = await avatarData.data.data.image_key
+        newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken, groupId)
+        newUserdata = await runTransaction(dbstore, async (transaction) => {
+          await transaction.update(userDocRef, { 
+            larkchatid: newlarkchatid
+          })
+        })
+      }
     } else {
-      avatarData = await functionjs.upload_avatar_lark(getGroup.pictureUrl , thisstoken)
-      avatarKey = await avatarData.data.data.image_key
-      newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken, groupId)
-      newUserdata = await runTransaction(dbstore, async (transaction) => {
+      await runTransaction(dbstore, async (transaction) => {
         await transaction.update(userDocRef, { 
-          larkchatid: newlarkchatid
+          displayname: userDisplayname,
+          pictureurl: userDisplayImage
+        });
+      });
+  
+      if (userDisplayImage == "none") {
+        newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , "none", thisstoken, groupId)
+        newUserdata = await runTransaction(dbstore, async (transaction) => {
+          await transaction.update(userDocRef, { 
+            larkchatid: newlarkchatid
+          })
         })
-      })
+      } else {
+        avatarData = await functionjs.upload_avatar_lark(getGroup.pictureUrl , thisstoken)
+        avatarKey = await avatarData.data.data.image_key
+        newlarkchatid = await functionjs.create_larkchat(thisforcompany, userDisplayname , avatarKey, thisstoken, groupId)
+        newUserdata = await runTransaction(dbstore, async (transaction) => {
+          await transaction.update(userDocRef, { 
+            larkchatid: newlarkchatid
+          })
+        })
+      }
     }
+    
     
     return newlarkchatid
   },
@@ -594,18 +649,25 @@ const functionjs = {
     let linedata = response.data
     return linedata
   },
-  send_message_by_groupid: async function (thisstoken, thisforcompany, groupId, datamessage) {
+  send_message_by_groupid: async function (thisstoken, thisforcompany, groupId, datamessage, chattype) {
     let linetoken = thisforcompany.linetoken
     let thismessagetype = datamessage.message_data.message.type
     let datamessagekey = datamessage.id
     let contentdata = datamessage.message_data
     let datareturn = ""
+    
     let userdataref = doc(dbstore, "usergroupline_"+thisforcompany.name, groupId);
     let userdataget = await getDoc(userdataref);
     let userdata = await userdataget.data()
-    console.log(datamessage.message_data.source.userId)
-    await functionjs.set_groupmessage_status(datamessagekey, thisforcompany, 'process')
-    let thisuserget = await functionjs.get_userlinegroup_member(thisstoken, linetoken, datamessage.message_data.source.userId, groupId)
+    let thisuserget
+    //console.log(datamessage.message_data.source.userId)
+    if (chattype == "group") {
+      await functionjs.set_groupmessage_status(datamessagekey, thisforcompany, 'process')
+      thisuserget = await functionjs.get_userlinegroup_member(thisstoken, linetoken, datamessage.message_data.source.userId, groupId)
+    } else {
+      await functionjs.set_message_status(datamessagekey, thisforcompany, 'process')
+      thisuserget = "LINE MESSAGE"
+    }
     console.log(thisuserget)
     switch(thismessagetype) {
       case 'text':
@@ -1372,21 +1434,36 @@ const functionjs = {
         break;
     }
   },
-  query_message_by_usergroup: async function (thisstoken, thisforcompany, groupId) {
+  query_message_by_usergroup: async function (thisstoken, thisforcompany, groupId, type) {
     let dataref = collection(dbstore, "message_groupline_"+thisforcompany.name)
-    const q = query(dataref, where("status", "==", "wait"), where("group_id", "==", groupId) );
-    const querySnapshot = await getDocs(q);
-    let newdatajson = []
-    await querySnapshot.forEach(async (doc) => {
-      let bodydata = doc.data()
-      bodydata.id = doc.id
-      newdatajson.push(bodydata)
-    });
+    if (type == "group"){
+      const q = query(dataref, where("status", "==", "wait"), where("group_id", "==", groupId) );
+      const querySnapshot = await getDocs(q);
+      let newdatajson = []
+      await querySnapshot.forEach(async (doc) => {
+        let bodydata = doc.data()
+        bodydata.id = doc.id
+        newdatajson.push(bodydata)
+      });
 
-    await newdatajson.forEach(async (element) => {
-      await functionjs.send_message_by_groupid(thisstoken, thisforcompany, groupId, element)
-    });
-    console.log("start query_message_by_user")
+      await newdatajson.forEach(async (element) => {
+        await functionjs.send_message_by_groupid(thisstoken, thisforcompany, groupId, element, 'group')
+      });
+      console.log("start query_message_by_user")
+    } else {
+      const q = query(dataref, where("status", "==", "wait"), where("user_id", "==", groupId) );
+      const querySnapshot = await getDocs(q);
+      let newdatajson = []
+      await querySnapshot.forEach(async (doc) => {
+        let bodydata = doc.data()
+        bodydata.id = doc.id
+        newdatajson.push(bodydata)
+      });
+
+      await newdatajson.forEach(async (element) => {
+        await functionjs.send_message_by_groupid(thisstoken, thisforcompany, groupId, element, 'user')
+      });
+    }
   },
   query_message_by_user: async function (thisstoken, thisforcompany, userId) {
     let dataref = collection(dbstore, "message_line_"+thisforcompany.name)
