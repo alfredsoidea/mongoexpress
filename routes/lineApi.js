@@ -109,6 +109,8 @@ const lineApi = (app) => {
           console.log(responsequery)
           await res.status(200).send('ok')
         }
+      } else {
+        await res.status(200).send('ok')
       }
     })
 
